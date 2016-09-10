@@ -31,12 +31,28 @@ public class AnchorMetricByMinutes {
     @Column(name = "record_effective_time")
     private Date recordEffectiveTime;
     
+    public AnchorMetricByMinutes() {
+        
+    }
+    
     public AnchorMetricByMinutes(Long anchorId, String type, Integer value, Date recordEffectiveTime) {
         this.anchorId = anchorId;
         this.type = type;
         this.value = value;
         this.recordEffectiveTime = recordEffectiveTime;
         this.created = new Date();
+    }
+    
+    public String getType() {
+        return type;
+    }
+    
+    public Integer getValue() {
+        return value;
+    }
+    
+    public Date getRecordEffectiveTime() {
+        return recordEffectiveTime;
     }
     
 }
