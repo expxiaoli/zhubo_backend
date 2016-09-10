@@ -119,7 +119,7 @@ public class ParseQixiuRoomPageTask {
     
     public static void main(String[] args) throws JDOMException, IOException, ParseException {
         ParseQixiuRoomPageTask task = new ParseQixiuRoomPageTask(
-                "/Users/xiao.li/coding/zhubo/sample_data/room_page", ResourceManager.generateResourceManager());
+                "sample_data/room_page", ResourceManager.generateResourceManager());
         task.run();
     }
     

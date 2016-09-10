@@ -67,7 +67,7 @@ public class ParseQixiuPlatformPageTask {
 
 	public static void main(String[] args) throws JDOMException, IOException{
 		ParseQixiuPlatformPageTask task = new ParseQixiuPlatformPageTask(
-				"/Users/xiao.li/coding/zhubo/sample_data/platform_page", ResourceManager.generateResourceManager());
+                "sample_data/platform_page", ResourceManager.generateResourceManager());
 		task.run();
 	}
 }
