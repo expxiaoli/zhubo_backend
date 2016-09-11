@@ -9,14 +9,14 @@
     	<property name="hibernate.connection.url">jdbc:mysql://115.28.22.18:3306/zhubo_dev</property>
     	<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
     	<property name="hibernate.connection.pool.size">20</property>          
-        <property name="hibernate.show_sql">true</property>   
+        <property name="hibernate.show_sql">false</property>   
         <property name="jdbc.fetch_size">50</property>   
         <property name="jdbc.batch_size">23</property>   
         <property name="jdbc.use_scrollable_resultset">false</property>   
         <property name="Connection.useUnicode">true</property>   
     	<property name="connection.characterEncoding">gbk</property>
     	<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
-    	<property name="hbm2ddl.auto">update</property> 
+    	<property name="hbm2ddl.auto">create</property> 
     	<mapping class="com.zhubo.entity.Platform"/>
     	<mapping class="com.zhubo.entity.Anchor"/>
     	<mapping class="com.zhubo.entity.AnchorMetricByMinutes"/>

@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.global.ResourceManager;
+import com.zhubo.helper.ModelHelper;
 
 public class ParseQixiuRoomPageTask {
     private File file;
@@ -33,7 +34,7 @@ public class ParseQixiuRoomPageTask {
         this.resourceManager = resourceManager;
     }
     
-    public void run() throws JDOMException, IOException, ParseException {
+    public boolean run() throws JDOMException, IOException, ParseException {
         SAXBuilder builder = new SAXBuilder();
         Document document = builder.build(file);
 
@@ -42,13 +43,16 @@ public class ParseQixiuRoomPageTask {
             .getChild("PostDocument", Namespace.getNamespace("Spider", "urn:http://service.sina.com.cn/spider"))
             .getChild("document");
         
-        String pagePlatform = dataElement.getChild("platform").getValue();
         String pageClass = dataElement.getChild("class").getValue();
-        String dataStr = dataElement.getChild("date").getValue();
-        Date pageDate = sdf.parse(dataStr);
-        if(pagePlatform.equals(curPlatform) && pageClass.equals(curClass)) {
+        if(pageClass.equals(curClass)) {
+            String pagePlatform = dataElement.getChild("platform").getValue();
+            String dataStr = dataElement.getChild("date").getValue();
+            Date pageDate = sdf.parse(dataStr);
             Element allContItemElement = dataElement.getChild("cont_items");
             parseAndStoreMetric(allContItemElement, pageDate);
+            return true;
+        } else {
+            return false;
         }
         
     }
@@ -79,33 +83,19 @@ public class ParseQixiuRoomPageTask {
             resourceManager.getDatabaseSession().save(metricByMinutes);
         }
         resourceManager.commit();
-        System.out.println("parse and store metric done");
     }
     
     public Anchor getAnchorOrNewOne(ResourceManager rm, Integer platformId, Long anchorAliasId, String anchorName) {
-        Anchor anchor = getAnchor(rm, platformId, anchorAliasId);
+        Anchor anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         if(anchor == null) {
             System.out.println(String.format("platform_id %d, anchor_alias_id %d is not existed", platformId, anchorAliasId));
             Anchor newAnchor = new Anchor(platformId, anchorAliasId, anchorName);
             rm.getDatabaseSession().save(newAnchor);
             rm.commit();
             System.out.println(String.format("insert platform_id %d, anchor_alias_id %d to anchor table done", platformId, anchorAliasId));
-            anchor = getAnchor(rm, platformId, anchorAliasId);
+            anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         }
         return anchor;
-    }
-    
-    public Anchor getAnchor(ResourceManager rm, Integer platformId, Long anchorAliasId) {
-        Session session = rm.getDatabaseSession();
-        Query query = session.createQuery("from Anchor where platform_id = :platform_id and anchor_alias_id = :anchor_alias_id");
-        query.setParameter("platform_id", platformId);
-        query.setParameter("anchor_alias_id", anchorAliasId);
-        List<Anchor> anchors = query.list();
-        if(anchors.isEmpty()) {
-            return null;
-        } else {
-            return anchors.get(0);
-        }
     }
     
     public static class Metric {
