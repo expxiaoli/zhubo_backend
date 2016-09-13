@@ -79,10 +79,11 @@ public class ParseQixiuPlatformPageTask {
             }
         }
     }
-
+/*
     public static void main(String[] args) throws JDOMException, IOException, PageFormatException {
         ParseQixiuPlatformPageTask task = new ParseQixiuPlatformPageTask(
                 "sample_data/platform_page", ResourceManager.generateResourceManager());
         task.run();
     }
+*/
 }

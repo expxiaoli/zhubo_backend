@@ -12,6 +12,7 @@ import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 
 public class ParseAllQixiuPlatformPageTask {
+/*
     public static void main(String[] args) throws JDOMException, IOException, ParseException {        
         String folderPath = args[0];
         File folder = new File(folderPath);
@@ -48,4 +49,5 @@ public class ParseAllQixiuPlatformPageTask {
             System.out.println(errorFilePath);
         }
     }
+*/
 }

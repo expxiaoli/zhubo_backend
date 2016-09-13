@@ -106,12 +106,12 @@ public class ParseQixiuRoomPageTask {
             this.value = value;
         }
     }
-    
+/*
     public static void main(String[] args) throws JDOMException, IOException, ParseException {
         ParseQixiuRoomPageTask task = new ParseQixiuRoomPageTask(
                 "sample_data/room_page", ResourceManager.generateResourceManager());
         task.run();
     }
-    
+*/
 
 }
