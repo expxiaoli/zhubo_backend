@@ -11,6 +11,7 @@ import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
 
 import com.zhubo.entity.Anchor;
+import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.ModelHelper;
 
@@ -26,7 +27,7 @@ public class ParseQixiuPlatformPageTask {
         this.resourceManager = resourceManager;
     }
 
-    public boolean run() throws JDOMException, IOException {
+    public boolean run() throws JDOMException, IOException, PageFormatException {
         SAXBuilder builder = new SAXBuilder();
         Document document = builder.build(file);
 
@@ -41,16 +42,21 @@ public class ParseQixiuPlatformPageTask {
                 .getChild("document");
         String pageClass = dataElement.getChild("class").getValue();
         if (pageClass.equals("奇秀广场")) {
-            String pagePlatform = dataElement.getChild("platform").getValue();
-            String pageTime = dataElement.getChild("time").getValue();
-            String pageType = dataElement.getChild("type").getValue();
-            Element allContItemElement = dataElement.getChild("cont_items");
-            parseAndStoreAnchorContent(allContItemElement, pageType);
-            return true;
+            if (dataElement.getChild("platform") != null && dataElement.getChild("time") != null
+                    && dataElement.getChild("type") != null) {
+                String pagePlatform = dataElement.getChild("platform").getValue();
+                String pageTime = dataElement.getChild("time").getValue();
+                String pageType = dataElement.getChild("type").getValue();
+                Element allContItemElement = dataElement.getChild("cont_items");
+                parseAndStoreAnchorContent(allContItemElement, pageType);
+                return true;
+            } else {
+                throw new PageFormatException("platform, time or type element is not existed");
+            }
         } else {
             return false;
         }
-    
+
     }
 
     public void parseAndStoreAnchorContent(Element root, String pageType) {
@@ -74,7 +80,7 @@ public class ParseQixiuPlatformPageTask {
         }
     }
 
-    public static void main(String[] args) throws JDOMException, IOException {
+    public static void main(String[] args) throws JDOMException, IOException, PageFormatException {
         ParseQixiuPlatformPageTask task = new ParseQixiuPlatformPageTask(
                 "sample_data/platform_page", ResourceManager.generateResourceManager());
         task.run();

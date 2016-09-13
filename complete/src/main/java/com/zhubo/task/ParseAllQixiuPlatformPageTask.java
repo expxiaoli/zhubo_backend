@@ -8,6 +8,7 @@ import java.util.List;
 import org.jdom.JDOMException;
 
 import com.google.common.collect.Lists;
+import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 
 public class ParseAllQixiuPlatformPageTask {
@@ -26,6 +27,8 @@ public class ParseAllQixiuPlatformPageTask {
             try {
                 result = task.run();
             } catch (JDOMException e) {
+                errorFilePaths.add(file.getPath());
+            } catch (PageFormatException e) {
                 errorFilePaths.add(file.getPath());
             }
             if(result) {
