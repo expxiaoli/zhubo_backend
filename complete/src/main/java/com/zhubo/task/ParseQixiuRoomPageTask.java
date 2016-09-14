@@ -55,8 +55,10 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             } catch (ParseException e) {
                 throw new PageFormatException("platform, time or type element is not existed"); 
             } catch (SQLException e) {
+                resourceManager.getDatabaseSession().flush();
                 throw new PageFormatException("invalid utf-8 string"); 
             } catch (GenericJDBCException e) {
+                resourceManager.getDatabaseSession().flush();
                 throw new PageFormatException("invalid utf-8 string"); 
             }
         } else {
