@@ -15,17 +15,14 @@ import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.ModelHelper;
 
-public class ParseQixiuPlatformPageTask {
-    private File file;
+public class ParseQixiuPlatformPageTask extends BaseParsePageTask{
+    public ParseQixiuPlatformPageTask(String filePath, ResourceManager resourceManager) {
+        super(filePath, resourceManager);
+    }
+
     private static Integer platformId = 1;
-    private final ResourceManager resourceManager;
     private static final String curPlatform = "平台";
     private static final String curClass = "奇秀广场";
-
-    public ParseQixiuPlatformPageTask(String filePath, ResourceManager resourceManager) {
-        file = new File(filePath);
-        this.resourceManager = resourceManager;
-    }
 
     public boolean run() throws JDOMException, IOException, PageFormatException {
         SAXBuilder builder = new SAXBuilder();

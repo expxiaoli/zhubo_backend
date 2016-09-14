@@ -16,7 +16,7 @@
         <property name="Connection.useUnicode">true</property>   
     	<property name="connection.characterEncoding">gbk</property>
     	<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
-    	<property name="hbm2ddl.auto">update</property> 
+    	<property name="hbm2ddl.auto">create</property> 
     	<mapping class="com.zhubo.entity.Platform"/>
     	<mapping class="com.zhubo.entity.Anchor"/>
     	<mapping class="com.zhubo.entity.AnchorMetricByMinutes"/>
