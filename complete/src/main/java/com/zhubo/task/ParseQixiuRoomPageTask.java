@@ -2,6 +2,7 @@ package com.zhubo.task;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.exception.GenericJDBCException;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -52,6 +54,10 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
                 return true;
             } catch (ParseException e) {
                 throw new PageFormatException("platform, time or type element is not existed"); 
+            } catch (SQLException e) {
+                throw new PageFormatException("invalid utf-8 string"); 
+            } catch (GenericJDBCException e) {
+                throw new PageFormatException("invalid utf-8 string"); 
             }
         } else {
             return false;
@@ -59,7 +65,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         
     }
 
-    private void parseAndStoreMetric(Element root, Date pageDate) {
+    private void parseAndStoreMetric(Element root, Date pageDate) throws SQLException, GenericJDBCException {
         List<Element> itemElements = root.getChildren();
         Long anchorAliasId = null;
         String anchorName = null;
@@ -88,7 +94,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
     }
 
     public Anchor getAnchorOrNewOne(ResourceManager rm, Integer platformId, Long anchorAliasId,
-            String anchorName) {
+            String anchorName) throws SQLException, GenericJDBCException {
         Anchor anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         if (anchor == null) {
             System.out.println(String.format("platform_id %d, anchor_alias_id %d is not existed",
