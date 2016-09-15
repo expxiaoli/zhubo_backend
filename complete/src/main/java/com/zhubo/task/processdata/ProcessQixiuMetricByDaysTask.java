@@ -8,13 +8,14 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 
 import com.google.common.collect.Maps;
+import com.zhubo.entity.AnchorMetricByDays;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 
 public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
 
-    private static final int limit = 10;
+    private static final int limit = 200;
     private TimeUnit timeUnit = TimeUnit.DAY;
 
     private Map<Long, Map<String, Map<Date, Integer>>> metrics; // [anchor_id][type][date]
@@ -26,12 +27,11 @@ public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
     @Override
     public boolean run() {
         metrics = Maps.newHashMap();
-        Session session = resourceManager.getDatabaseSession();
         long lowerBoundId = 0;
         long upperBoundId = lowerBoundId + limit;
         long maxAnchorId = 0;
         while (true) {
-            Query query = session
+            Query query = resourceManager.getDatabaseSession()
                     .createQuery("from AnchorMetricByMinutes where anchor_id > :lower_bound_id and anchor_id < :upper_bound_id");
             query.setParameter("lower_bound_id", lowerBoundId);
             query.setParameter("upper_bound_id", upperBoundId);
@@ -50,26 +50,30 @@ public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
                     maxAnchorId = anchorId;
                 }
             }
+            storeMetric();
+            clearMetric();
             lowerBoundId = maxAnchorId;
             upperBoundId = lowerBoundId + limit;
-
-            break;
         }
-        print();
         return true;
     }
 
-    private void print() {
+    private void storeMetric() {
         for (Long anchorId : metrics.keySet()) {
             Map<String, Map<Date, Integer>> anchorMetric = metrics.get(anchorId);
             for (String type : anchorMetric.keySet()) {
                 Map<Date, Integer> typeMetric = anchorMetric.get(type);
                 for (Date date : typeMetric.keySet()) {
-                    System.out.println(anchorId + " " + type + " " + date + " "
-                            + typeMetric.get(date));
+                    AnchorMetricByDays byDays = new AnchorMetricByDays(anchorId, type, typeMetric.get(date), date);
+                    resourceManager.getDatabaseSession().save(byDays);
                 }
             }
         }
+        resourceManager.commit();
+    }
+    
+    private void clearMetric() {
+        metrics.clear();
     }
 
     private void addMetric(long anchorId, String type, Date date, int count) {

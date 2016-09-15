@@ -20,5 +20,6 @@
     	<mapping class="com.zhubo.entity.Platform"/>
     	<mapping class="com.zhubo.entity.Anchor"/>
     	<mapping class="com.zhubo.entity.AnchorMetricByMinutes"/>
+    	<mapping class="com.zhubo.entity.AnchorMetricByDays"/>
     </session-factory>
 </hibernate-configuration>
