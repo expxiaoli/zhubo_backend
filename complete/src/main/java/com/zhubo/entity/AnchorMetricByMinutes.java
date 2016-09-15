@@ -51,6 +51,10 @@ public class AnchorMetricByMinutes {
         return value;
     }
     
+    public Long getAnchorId() {
+        return anchorId;
+    }
+    
     public Date getRecordEffectiveTime() {
         return recordEffectiveTime;
     }
