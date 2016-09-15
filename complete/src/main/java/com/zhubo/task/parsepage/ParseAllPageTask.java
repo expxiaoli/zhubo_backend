@@ -1,4 +1,4 @@
-package com.zhubo.task;
+package com.zhubo.task.parsepage;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +15,7 @@ public class ParseAllPageTask {
 
     private static List<Class> parsePageTaskFactoryClasses = Lists.newArrayList(
             ParseQixiuPlatformPageFactory.class, ParseQixiuRoomPageFactory.class);
-
+/*
     public static void main(String[] args) throws JDOMException, IOException, ParseException,
             InstantiationException, IllegalAccessException {
         String folderPath = args[0];
@@ -67,5 +67,5 @@ public class ParseAllPageTask {
             System.out.println(errorFilePath);
         }
     }
-
+*/
 }

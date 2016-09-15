@@ -1,8 +1,8 @@
-package com.zhubo.task;
+package com.zhubo.task.parsepage;
 
 import com.zhubo.global.ResourceManager;
 
-public class ParseQixiuRoomPageFactory extends ParsePageTaskFactory {
+public class ParseQixiuRoomPageFactory extends BaseParsePageFactory {
 
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
