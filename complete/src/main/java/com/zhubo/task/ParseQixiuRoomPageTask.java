@@ -54,12 +54,6 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
                 return true;
             } catch (ParseException e) {
                 throw new PageFormatException("platform, time or type element is not existed"); 
-            } catch (SQLException e) {
-                resourceManager.getDatabaseSession().flush();
-                throw new PageFormatException("invalid utf-8 string"); 
-            } catch (GenericJDBCException e) {
-                resourceManager.getDatabaseSession().flush();
-                throw new PageFormatException("invalid utf-8 string"); 
             }
         } else {
             return false;
@@ -67,7 +61,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         
     }
 
-    private void parseAndStoreMetric(Element root, Date pageDate) throws SQLException, GenericJDBCException {
+    private void parseAndStoreMetric(Element root, Date pageDate) {
         List<Element> itemElements = root.getChildren();
         Long anchorAliasId = null;
         String anchorName = null;
@@ -96,7 +90,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
     }
 
     public Anchor getAnchorOrNewOne(ResourceManager rm, Integer platformId, Long anchorAliasId,
-            String anchorName) throws SQLException, GenericJDBCException {
+            String anchorName) {
         Anchor anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         if (anchor == null) {
             System.out.println(String.format("platform_id %d, anchor_alias_id %d is not existed",
