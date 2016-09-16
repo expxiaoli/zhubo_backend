@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -18,14 +19,18 @@ import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.mysql.jdbc.StringUtils;
 import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
+import com.zhubo.entity.AudiencePayByMinutes;
+import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
+import com.zhubo.task.processdata.TimeUnit;
 
 public class ParseQixiuRoomPageTask extends BaseParsePageTask {
     private static Integer platformId = 1;
@@ -42,12 +47,17 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         Document document = builder.build(file);
 
         Element root = document.getRootElement();
-        Element dataElement = root.getChild("Body", Namespace.getNamespace("SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/"))
-            .getChild("PostDocument", Namespace.getNamespace("Spider", "urn:http://service.sina.com.cn/spider"))
-            .getChild("document");
-        
+        Element dataElement = root
+                .getChild(
+                        "Body",
+                        Namespace.getNamespace("SOAP-ENV",
+                                "http://schemas.xmlsoap.org/soap/envelope/"))
+                .getChild("PostDocument",
+                        Namespace.getNamespace("Spider", "urn:http://service.sina.com.cn/spider"))
+                .getChild("document");
+
         String pageClass = dataElement.getChild("class").getValue();
-        if(pageClass.equals(curClass)) {
+        if (pageClass.equals(curClass)) {
             try {
                 String pagePlatform = dataElement.getChild("platform").getValue();
                 String dataStr = dataElement.getChild("date").getValue();
@@ -56,12 +66,12 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
                 parseAndStoreMetric(allContItemElement, pageDate);
                 return true;
             } catch (ParseException e) {
-                throw new PageFormatException("platform, time or type element is not existed"); 
+                throw new PageFormatException("platform, time or type element is not existed");
             }
         } else {
             return false;
         }
-        
+
     }
 
     private void parseAndStoreMetric(Element root, Date pageDate) {
@@ -69,7 +79,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         Long anchorAliasId = null;
         String anchorName = null;
         List<Metric> metrics = Lists.newArrayList();
-        List<Pay> pays = Lists.newArrayList();
+        Map<String, Pay> pays = Maps.newHashMap();
         for (Element itemElement : itemElements) {
             if (itemElement.getChild("cont_item_name") != null) {
                 String itemName = itemElement.getChildText("cont_item_name");
@@ -81,37 +91,90 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
                 } else {
                     metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
                 }
-            } else if(itemElement.getChild("vipnickname") != null) {
+            } else if (itemElement.getChild("vipnickname") != null) {
                 String audienceName = itemElement.getChildText("vipnickname");
-                Long audienceAliasId = StringUtils.isNullOrEmpty(itemElement.getChildText("vipuserid")) ?  null : Long.valueOf(itemElement.getChildText("vipuserid"));
-                Integer money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null : Integer.valueOf(itemElement.getChildText("top_money"));
-                pays.add(new Pay(audienceAliasId, audienceName, money));
-                
+                Long audienceAliasId = StringUtils.isNullOrEmpty(itemElement
+                        .getChildText("vipuserid")) ? null : Long.valueOf(itemElement
+                        .getChildText("vipuserid"));
+                Integer money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null
+                        : Integer.valueOf(itemElement.getChildText("top_money"));
+                pays.put(audienceName, new Pay(audienceAliasId, audienceName, money));
+
             }
         }
 
         Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName);
-        /*
         for (Metric metric : metrics) {
-            AnchorMetricByMinutes metricByMinutes = new AnchorMetricByMinutes(anchor.getAnchorId(),
-                    metric.type, metric.value, pageDate);
-            resourceManager.getDatabaseSession().save(metricByMinutes);
+            if (ModelHelper.getMetric(resourceManager, anchor.getAnchorId(), metric.type, pageDate) == null) {
+                AnchorMetricByMinutes metricByMinutes = new AnchorMetricByMinutes(
+                        anchor.getAnchorId(), metric.type, metric.value, pageDate);
+                resourceManager.getDatabaseSession().save(metricByMinutes);
+            }
         }
-        */
-        for (Pay pay : pays) {
-            getAudienceOrNewOrUpdate(resourceManager, platformId, pay.audienceName, pay.audienceAliasId);
+        for (Pay pay : pays.values()) {
+            Audience audience = getAudienceOrNewOrUpdate(resourceManager, platformId,
+                    pay.audienceName, pay.audienceAliasId);
+            if (pay.money != null) {
+                storePayPeriodAndPayMinute(resourceManager, audience.getAudienceId(),
+                        anchor.getAnchorId(), platformId, pay.money, pageDate);
+            }
         }
         resourceManager.commit();
     }
-    
-    public static Audience getAudienceOrNewOrUpdate(ResourceManager rm, int platformId, String audienceName, Long audienceAliasId){
+
+    private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
+            int platformId, int periodMoney, Date ts) {
+        AudiencePayPeriod latestPayPeriod = ModelHelper
+                .getLatestPayPeriod(rm, audienceId, anchorId);
+        if (latestPayPeriod == null) {
+            Date periodStart = getQixiuPayAggregateDate(ts);
+            AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
+                    periodMoney, ts, periodStart);
+            rm.getDatabaseSession().save(payPeriod);
+            //do not store pay minute for the first pay
+        } else {
+            int lastMoney = latestPayPeriod.getMoney();
+            if (lastMoney < periodMoney) {
+                latestPayPeriod.setMoney(periodMoney);
+                latestPayPeriod.setRecordEffectiveDate(ts);
+                latestPayPeriod.setUpdated();
+                rm.getDatabaseSession().update(latestPayPeriod);
+                int money = periodMoney - lastMoney;
+                storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, money, ts);
+            } else if (lastMoney > periodMoney) {
+                Date periodStart = getQixiuPayAggregateDate(ts);
+                AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId,
+                        platformId, periodMoney, ts, periodStart);
+                rm.getDatabaseSession().save(payPeriod);
+                int money = periodMoney;
+                storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, money, ts);
+            }
+        }
+        rm.commit();
+    }
+
+    private void storeMinutePayIfNeeded(ResourceManager rm, long audienceId, long anchorId,
+            int platformId, int money, Date ts) {
+        if (ModelHelper.getPay(rm, audienceId, anchorId, ts) == null) {
+            AudiencePayByMinutes payByMinutes = new AudiencePayByMinutes(audienceId, anchorId,
+                    platformId, money, ts);
+            rm.getDatabaseSession().save(payByMinutes);
+        }
+    }
+
+    private Date getQixiuPayAggregateDate(Date ts) {
+        return GeneralHelper.getAggregateDate(ts, TimeUnit.WEEK);
+    }
+
+    public static Audience getAudienceOrNewOrUpdate(ResourceManager rm, int platformId,
+            String audienceName, Long audienceAliasId) {
         Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceName);
-        if(oldAudience == null) {
+        if (oldAudience == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
             rm.commit();
             return newAudience;
-        } else if(audienceAliasId != null && oldAudience.getAudienceAliasId() == null) {
+        } else if (audienceAliasId != null && oldAudience.getAudienceAliasId() == null) {
             oldAudience.setAudienceAliasId(audienceAliasId);
             rm.getDatabaseSession().update(oldAudience);
             rm.commit();
@@ -130,9 +193,6 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             Anchor newAnchor = new Anchor(platformId, anchorAliasId, anchorName);
             rm.getDatabaseSession().save(newAnchor);
             rm.commit();
-            System.out.println(String.format(
-                    "insert platform_id %d, anchor_alias_id %d to anchor table done", platformId,
-                    anchorAliasId));
             anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         }
         return anchor;
@@ -147,11 +207,12 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             this.value = value;
         }
     }
-    
+
     public static class Pay {
         public Long audienceAliasId;
         public String audienceName;
         public Integer money;
+
         public Pay(Long audienceAliasId, String audienceName, Integer money) {
             this.audienceAliasId = audienceAliasId;
             this.audienceName = audienceName;

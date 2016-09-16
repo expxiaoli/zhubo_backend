@@ -21,5 +21,8 @@
     	<mapping class="com.zhubo.entity.Anchor"/>
     	<mapping class="com.zhubo.entity.AnchorMetricByMinutes"/>
     	<mapping class="com.zhubo.entity.AnchorMetricByDays"/>
+    	<mapping class="com.zhubo.entity.AudiencePayByMinutes"/>
+    	<mapping class="com.zhubo.entity.AudiencePayPeriod"/>
+    	<mapping class="com.zhubo.entity.Audience"/>
     </session-factory>
 </hibernate-configuration>

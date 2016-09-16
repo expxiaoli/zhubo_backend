@@ -1,14 +1,19 @@
 package com.zhubo.helper;
 
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
 
 import com.zhubo.entity.Anchor;
+import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
+import com.zhubo.entity.AudiencePayByMinutes;
+import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.entity.Platform;
 import com.zhubo.global.ResourceManager;
+import com.zhubo.task.parsepage.ParseQixiuRoomPageTask.Pay;
 
 public class ModelHelper {
     
@@ -48,4 +53,48 @@ public class ModelHelper {
             return platforms.get(0);
         }
     }
+    
+    public static AnchorMetricByMinutes getMetric(ResourceManager rm, long anchorId, String type, Date ts) {
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AnchorMetricByMinutes where anchor_id = :anchor_id and type = :type and record_effective_time = :record_effective_time");
+        query.setParameter("anchor_id", anchorId);
+        query.setParameter("type", type);
+        query.setParameter("record_effective_time", ts);
+        List<AnchorMetricByMinutes> metrics = query.list();
+        if(metrics.isEmpty()) {
+            return null;
+        } else {
+            return metrics.get(0);
+        }
+    }
+    
+    public static AudiencePayByMinutes getPay(ResourceManager rm, long audienceId, long anchorId, Date ts) {
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AudiencePayByMinutes where anchor_id = :anchor_id and audience_id = :audience_id and record_effective_time = :record_effective_time");
+        query.setParameter("anchor_id", anchorId);
+        query.setParameter("audience_id", audienceId);
+        query.setParameter("record_effective_time", ts);
+        List<AudiencePayByMinutes> metrics = query.list();
+        if(metrics.isEmpty()) {
+            return null;
+        } else {
+            return metrics.get(0);
+        }
+    }
+    
+    public static AudiencePayPeriod getLatestPayPeriod(ResourceManager rm, long audienceId, long anchorId) {
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AudiencePayPeriod where anchor_id = :anchor_id and audience_id = :audience_id order by record_effective_time desc");
+        query.setParameter("anchor_id", anchorId);
+        query.setParameter("audience_id", audienceId);
+        List<AudiencePayPeriod> pays = query.list();
+        if(pays.isEmpty()) {
+            return null;
+        } else {
+            return pays.get(0);
+        }
+        
+    }
+    
+    
 }
