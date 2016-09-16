@@ -24,9 +24,10 @@ public class AnchorController {
     }
     
     @RequestMapping("/search_anchor")
-    public AnchorResponse searchInfoByName(@RequestParam(value="key") String key) {
-        Query query = session.createQuery("from Anchor where anchor_name like :name");
-        query.setParameter("name", "%" + key + "%");
+    public AnchorResponse searchZhuboByAliasId(@RequestParam(value="room_id") Long roomId, @RequestParam(value="platform_id") Integer platformId) {
+        Query query = session.createQuery("from Anchor where anchor_alias_id = :room_id and platform_id = :platform_id");
+        query.setParameter("room_id", roomId);
+        query.setParameter("platform_id", platformId);
         List<Anchor> anchors = query.list();
         if(anchors.size() > 0) {
             Anchor anchor = anchors.get(0);
