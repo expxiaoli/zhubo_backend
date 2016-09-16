@@ -18,10 +18,13 @@ import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
 
 import com.google.common.collect.Lists;
+import com.mysql.jdbc.StringUtils;
 import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorMetricByMinutes;
+import com.zhubo.entity.Audience;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
+import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 
 public class ParseQixiuRoomPageTask extends BaseParsePageTask {
@@ -66,6 +69,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         Long anchorAliasId = null;
         String anchorName = null;
         List<Metric> metrics = Lists.newArrayList();
+        List<Pay> pays = Lists.newArrayList();
         for (Element itemElement : itemElements) {
             if (itemElement.getChild("cont_item_name") != null) {
                 String itemName = itemElement.getChildText("cont_item_name");
@@ -77,19 +81,47 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
                 } else {
                     metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
                 }
+            } else if(itemElement.getChild("vipnickname") != null) {
+                String audienceName = itemElement.getChildText("vipnickname");
+                Long audienceAliasId = StringUtils.isNullOrEmpty(itemElement.getChildText("vipuserid")) ?  null : Long.valueOf(itemElement.getChildText("vipuserid"));
+                Integer money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null : Integer.valueOf(itemElement.getChildText("top_money"));
+                pays.add(new Pay(audienceAliasId, audienceName, money));
+                
             }
         }
 
-        Anchor anchor = getAnchorOrNewOne(resourceManager, platformId, anchorAliasId, anchorName);
+        Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName);
+        /*
         for (Metric metric : metrics) {
             AnchorMetricByMinutes metricByMinutes = new AnchorMetricByMinutes(anchor.getAnchorId(),
                     metric.type, metric.value, pageDate);
             resourceManager.getDatabaseSession().save(metricByMinutes);
         }
+        */
+        for (Pay pay : pays) {
+            getAudienceOrNewOrUpdate(resourceManager, platformId, pay.audienceName, pay.audienceAliasId);
+        }
         resourceManager.commit();
     }
+    
+    public static Audience getAudienceOrNewOrUpdate(ResourceManager rm, int platformId, String audienceName, Long audienceAliasId){
+        Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceName);
+        if(oldAudience == null) {
+            Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
+            rm.getDatabaseSession().save(newAudience);
+            rm.commit();
+            return newAudience;
+        } else if(audienceAliasId != null && oldAudience.getAudienceAliasId() == null) {
+            oldAudience.setAudienceAliasId(audienceAliasId);
+            rm.getDatabaseSession().update(oldAudience);
+            rm.commit();
+            return oldAudience;
+        } else {
+            return oldAudience;
+        }
+    }
 
-    public Anchor getAnchorOrNewOne(ResourceManager rm, Integer platformId, Long anchorAliasId,
+    public Anchor getAnchorOrNew(ResourceManager rm, Integer platformId, Long anchorAliasId,
             String anchorName) {
         Anchor anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         if (anchor == null) {
@@ -113,6 +145,17 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         public Metric(String type, Integer value) {
             this.type = type;
             this.value = value;
+        }
+    }
+    
+    public static class Pay {
+        public Long audienceAliasId;
+        public String audienceName;
+        public Integer money;
+        public Pay(Long audienceAliasId, String audienceName, Integer money) {
+            this.audienceAliasId = audienceAliasId;
+            this.audienceName = audienceName;
+            this.money = money;
         }
     }
     /*

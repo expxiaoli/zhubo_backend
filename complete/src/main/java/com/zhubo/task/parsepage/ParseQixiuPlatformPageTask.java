@@ -69,12 +69,13 @@ public class ParseQixiuPlatformPageTask extends BaseParsePageTask{
                 anchor.setArea(area);
                 anchor.setType(pageType);
                 resourceManager.getDatabaseSession().save(anchor);
+                count++;
             }
-            count++;
             if (count % 10 == 0) {
                 resourceManager.commit();
             }
         }
+        resourceManager.commit();
     }
 /*
     public static void main(String[] args) throws JDOMException, IOException, PageFormatException {

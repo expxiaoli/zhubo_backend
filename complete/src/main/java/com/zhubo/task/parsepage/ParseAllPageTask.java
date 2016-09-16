@@ -13,22 +13,22 @@ import com.zhubo.global.ResourceManager;
 
 public class ParseAllPageTask {
 
-    private static List<Class> parsePageTaskFactoryClasses = Lists.newArrayList(
-            ParseQixiuPlatformPageFactory.class, ParseQixiuRoomPageFactory.class);
-/*
-    public static void main(String[] args) throws JDOMException, IOException, ParseException,
-            InstantiationException, IllegalAccessException {
-        String folderPath = args[0];
+    private List<Class> parsePageTaskFactoryClasses = Lists.newArrayList(
+      //      ParseQixiuPlatformPageFactory.class, 
+            ParseQixiuRoomPageFactory.class
+            );
+
+    public void run(String folderPath) throws InstantiationException, IllegalAccessException, IOException {
         File folder = new File(folderPath);
         ResourceManager rm = ResourceManager.generateResourceManager();
         int parseSuccessCount = 0;
         int toParseCount = 0;
         int totalPageCount = folder.list().length;
         List<String> errorFilePaths = Lists.newArrayList();
-        ParsePageTaskFactory factory;
+        BaseParsePageFactory factory;
         BaseParsePageTask task;
         for (Class factoryClass : parsePageTaskFactoryClasses) {
-            factory = (ParsePageTaskFactory) factoryClass.newInstance();
+            factory = (BaseParsePageFactory) factoryClass.newInstance();
             for (File file : folder.listFiles()) {
                 System.out.println("begin to parse " + file.getPath());
                 boolean result = false;
@@ -67,5 +67,10 @@ public class ParseAllPageTask {
             System.out.println(errorFilePath);
         }
     }
-*/
+    
+    public static void main(String[] args) throws JDOMException, IOException, ParseException,
+            InstantiationException, IllegalAccessException {
+        new ParseAllPageTask().run(args[0]);
+    }
+
 }
