@@ -17,7 +17,7 @@ import com.zhubo.global.ResourceManager;
 public class ParseAllPageTask {
 
     private List<Class> parsePageTaskFactoryClasses = Lists.newArrayList(
-      //      ParseQixiuPlatformPageFactory.class, 
+            ParseQixiuPlatformPageFactory.class, 
             ParseQixiuRoomPageFactory.class
             );
 
@@ -107,10 +107,10 @@ public class ParseAllPageTask {
         }
         
     }
-    
+    /*
     public static void main(String[] args) throws JDOMException, IOException, ParseException,
             InstantiationException, IllegalAccessException {
         new ParseAllPageTask().run(args[0]);
     }
-
+     */
 }

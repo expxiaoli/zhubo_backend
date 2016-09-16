@@ -17,8 +17,9 @@ public class ProcessAllDataTask {
             task.run();
         }
     }
-    
+    /*
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         new ProcessAllDataTask().run();
     }
+    */
 }
