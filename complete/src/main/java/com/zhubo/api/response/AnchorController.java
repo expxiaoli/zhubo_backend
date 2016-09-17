@@ -19,15 +19,13 @@ public class AnchorController {
 
     private final Session session = ResourceManager.generateResourceManager().getDatabaseSession();
 
-    @CrossOrigin(origins = "http://115.28.22.18:8880")
-    @GetMapping("/anchor")
+    @RequestMapping("/anchor")
     public AnchorResponse getInfoById(@RequestParam(value="id") Long anchorId) {
         Anchor anchor =  (Anchor) session.load(Anchor.class, anchorId);
         return new AnchorResponse(anchorId, anchor.getAnchorName(), anchor.getType(), anchor.getArea());
     }
     
-    @CrossOrigin(origins = "http://115.28.22.18:8880")
-    @GetMapping("/search_anchor")
+    @RequestMapping("/search_anchor")
     public AnchorResponse searchZhuboByAliasId(@RequestParam(value="room_id") Long roomId, @RequestParam(value="platform_id") Integer platformId) {
         Query query = session.createQuery("from Anchor where anchor_alias_id = :room_id and platform_id = :platform_id");
         query.setParameter("room_id", roomId);

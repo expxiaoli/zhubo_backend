@@ -25,8 +25,7 @@ public class AnchorMetricController {
     private final Session session = ResourceManager.generateResourceManager().getDatabaseSession();
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");  
 
-    @CrossOrigin(origins = "http://115.28.22.18:8880")
-    @GetMapping("/anchor_metric_minute")
+    @RequestMapping("/anchor_metric_minute")
     public AnchorMetricResponse getMetricMinute(@RequestParam(value="anchor_id") Long anchorId, @RequestParam(value="type") String type,
             @RequestParam(value="start") String start, @RequestParam(value="end") String end) throws ParseException {
         Date startDate = sdf.parse(start);
@@ -45,8 +44,7 @@ public class AnchorMetricController {
         return new AnchorMetricResponse(anchorId, type, items);
     }
     
-    @CrossOrigin(origins = "http://115.28.22.18:8880")
-    @GetMapping("/anchor_metric_day")
+    @RequestMapping("/anchor_metric_day")
     public AnchorMetricResponse getMetricDay(@RequestParam(value="anchor_id") Long anchorId, @RequestParam(value="type") String type, 
             @RequestParam(value="start") String start, @RequestParam(value="end") String end) throws ParseException {
         Date startDate = sdf.parse(start);
