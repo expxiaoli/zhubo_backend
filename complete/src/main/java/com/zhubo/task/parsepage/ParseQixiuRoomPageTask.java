@@ -30,6 +30,7 @@ import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
+import com.zhubo.helper.ModelHelper.PayPeriodObject;
 import com.zhubo.task.processdata.TimeUnit;
 
 public class ParseQixiuRoomPageTask extends BaseParsePageTask {
@@ -124,33 +125,13 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
             int platformId, int periodMoney, Date ts) {
-        AudiencePayPeriod latestPayPeriod = ModelHelper
-                .getLatestPayPeriod(rm, audienceId, anchorId);
-        if (latestPayPeriod == null) {
-            Date periodStart = getQixiuPayAggregateDate(ts);
-            AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
-                    periodMoney, ts, periodStart);
-            rm.getDatabaseSession().save(payPeriod);
-            //do not store pay minute for the first pay
-        } else {
-            int lastMoney = latestPayPeriod.getMoney();
-            if (lastMoney < periodMoney) {
-                latestPayPeriod.setMoney(periodMoney);
-                latestPayPeriod.setRecordEffectiveDate(ts);
-                latestPayPeriod.setUpdated();
-                rm.getDatabaseSession().update(latestPayPeriod);
-                int money = periodMoney - lastMoney;
-                storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, money, ts);
-            } else if (lastMoney > periodMoney) {
-                Date periodStart = getQixiuPayAggregateDate(ts);
-                AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId,
-                        platformId, periodMoney, ts, periodStart);
-                rm.getDatabaseSession().save(payPeriod);
-                int money = periodMoney;
-                storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, money, ts);
-            }
+        Map<Long, Map<Long, PayPeriodObject>> payPeriodCache = rm.getPayPeriodCache();
+        Date periodStart = getQixiuPayAggregateDate(ts);
+        PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
+        int diffMoney = ModelHelper.getDiffMoneyAndUpdatePayPeriodInCache(payPeriodCache, audienceId, anchorId, payPeriod);
+        if(diffMoney != 0) {
+            storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, diffMoney, ts);
         }
-        rm.commit();
     }
 
     private void storeMinutePayIfNeeded(ResourceManager rm, long audienceId, long anchorId,

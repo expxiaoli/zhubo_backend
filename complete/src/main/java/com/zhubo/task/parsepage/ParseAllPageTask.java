@@ -64,6 +64,8 @@ public class ParseAllPageTask {
                         parseSuccessCount, toParseCount, totalPageCount));
             }
         }
+        System.out.println("begin to store cache to database");
+        rm.storeCacheToDatabase();
         System.out.println("ParseAllPageTask done");
         System.out.println(String.format(
                 "parse page success %d, in parse range %d. total page count %d", parseSuccessCount,

@@ -59,6 +59,14 @@ public class AudiencePayPeriod {
     public Date getPeriodStart() {
         return periodStart;
     }
+    
+    public Date getRecordEffectiveTime() {
+        return recordEffectiveTime;
+    }
+    
+    public void setPlatformId (Integer platformId) {
+        this.platformId = platformId;
+    }
 
     public void setUpdated() {
         this.updated = new Date();
