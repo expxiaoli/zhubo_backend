@@ -24,5 +24,6 @@
     	<mapping class="com.zhubo.entity.AudiencePayByMinutes"/>
     	<mapping class="com.zhubo.entity.AudiencePayPeriod"/>
     	<mapping class="com.zhubo.entity.Audience"/>
+    	<mapping class="com.zhubo.entity.AnchorIncomeByMinutes"/>
     </session-factory>
 </hibernate-configuration>

@@ -7,7 +7,9 @@ import com.zhubo.global.ResourceManager;
 
 public class ProcessAllDataTask {
     private static List<Class> processDataFactoryClasses = Lists.newArrayList(
-            ProcessQixiuMetricByDaysFactory.class);
+            ProcessQixiuAnchorIncomeByMinutesFactory.class
+//            ProcessQixiuMetricByDaysFactory.class
+            );
     
     public void run() throws InstantiationException, IllegalAccessException {
         ResourceManager rm = ResourceManager.generateResourceManager();
@@ -17,9 +19,10 @@ public class ProcessAllDataTask {
             task.run();
         }
     }
-    /*
+/*    
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         new ProcessAllDataTask().run();
+        System.out.println("process all data done");
     }
     */
 }
