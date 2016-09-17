@@ -107,10 +107,10 @@ public class ParseAllPageTask {
         }
         
     }
-
+/*
     public static void main(String[] args) throws JDOMException, IOException, ParseException,
             InstantiationException, IllegalAccessException {
         new ParseAllPageTask().run(args[0]);
     }
-
+*/
 }

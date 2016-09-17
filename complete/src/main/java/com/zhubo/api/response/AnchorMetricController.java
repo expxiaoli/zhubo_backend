@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +25,8 @@ public class AnchorMetricController {
     private final Session session = ResourceManager.generateResourceManager().getDatabaseSession();
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");  
 
-    @RequestMapping("/anchor_metric_minute")
+    @CrossOrigin(origins = "http://115.28.22.18:8880")
+    @GetMapping("/anchor_metric_minute")
     public AnchorMetricResponse getMetricMinute(@RequestParam(value="anchor_id") Long anchorId, @RequestParam(value="type") String type,
             @RequestParam(value="start") String start, @RequestParam(value="end") String end) throws ParseException {
         Date startDate = sdf.parse(start);
@@ -42,7 +45,8 @@ public class AnchorMetricController {
         return new AnchorMetricResponse(anchorId, type, items);
     }
     
-    @RequestMapping("/anchor_metric_day")
+    @CrossOrigin(origins = "http://115.28.22.18:8880")
+    @GetMapping("/anchor_metric_day")
     public AnchorMetricResponse getMetricDay(@RequestParam(value="anchor_id") Long anchorId, @RequestParam(value="type") String type, 
             @RequestParam(value="start") String start, @RequestParam(value="end") String end) throws ParseException {
         Date startDate = sdf.parse(start);
