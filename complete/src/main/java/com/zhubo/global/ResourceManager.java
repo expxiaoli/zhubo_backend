@@ -16,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zhubo.entity.Platform;
 import com.zhubo.helper.ModelHelper;
-import com.zhubo.helper.ModelHelper.PayPeriodObject;
 
 public class ResourceManager {
     private SessionFactory sessionFactory;
@@ -25,8 +24,6 @@ public class ResourceManager {
     private static volatile ResourceManager instance = null;
     private static final Object lock = new Object();
     private static List<Platform> platforms = Lists.newArrayList(new Platform(1, "奇秀"));
-
-    private Map<Long, Map<Long, PayPeriodObject>> payPeriodCache;
     private DatabaseCache dbCache;
 
     public static ResourceManager generateResourceManager() {
@@ -50,7 +47,6 @@ public class ResourceManager {
     public void init() {
         initDatabase();
         initPlatform(this);
-        initPayPeriodCache(this);
     }
     
     public void initDatabaseCacheAndBatchLoad(Date minTs, Date maxTs) {
@@ -77,10 +73,6 @@ public class ResourceManager {
         }
     }
 
-    private void initPayPeriodCache(ResourceManager rm) {
-        payPeriodCache = ModelHelper.getAllLatestPayPeriod(rm, 1);
-    }
-
     public Session getDatabaseSession() {
         return session;
     }
@@ -89,18 +81,10 @@ public class ResourceManager {
         return transaction;
     }
     
-    public Map<Long, Map<Long, PayPeriodObject>> getPayPeriodCache() {
-        return payPeriodCache;
-    }
-    
-    
     public DatabaseCache getDatabaseCache() {
         return dbCache;
     }
     
-    public void storeCacheToDatabase() {
-        ModelHelper.setAllLatestPayPeriod(this, payPeriodCache, 1);
-    }
 
     public void commit() {
         transaction.commit();

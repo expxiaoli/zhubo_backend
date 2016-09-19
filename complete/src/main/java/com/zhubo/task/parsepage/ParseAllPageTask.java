@@ -21,7 +21,7 @@ import com.zhubo.helper.GeneralHelper;
 public class ParseAllPageTask {
 
     private List<Class> parsePageTaskFactoryClasses = Lists.newArrayList(
-   //         ParseQixiuPlatformPageFactory.class, 
+            ParseQixiuPlatformPageFactory.class, 
             ParseQixiuRoomPageFactory.class
             );
 
@@ -29,9 +29,6 @@ public class ParseAllPageTask {
     public void run(String folderPath) throws InstantiationException, IllegalAccessException, IOException, ParseException {
         File folder = new File(folderPath);
         ResourceManager rm = ResourceManager.generateResourceManager();
-        rm.initDatabaseCacheAndBatchLoad(
-                GeneralHelper.parseDateFromFileMiddleName("20160101000000"), 
-                GeneralHelper.parseDateFromFileMiddleName("20170101000000"));
         int parseSuccessCount = 0;
         int toParseCount = 0;
         int totalPageCount = folder.list().length;
@@ -40,6 +37,18 @@ public class ParseAllPageTask {
         BaseParsePageTask task;
         List<File> files = getValidFiles(folder.listFiles());
         Collections.sort(files, new byPageTimeComparator());
+        
+        String minMiddleName = getMinMiddleName(files);
+        String maxMiddleName = getMaxMiddleName(files);
+        System.out.println("min middle name for files: " + minMiddleName);
+        System.out.println("max middle name for files: " + maxMiddleName);
+        
+        
+        rm.initDatabaseCacheAndBatchLoad(
+                GeneralHelper.parseDateFromFileMiddleName(minMiddleName), 
+                GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));
+        
+        
         for (Class factoryClass : parsePageTaskFactoryClasses) {
             factory = (BaseParsePageFactory) factoryClass.newInstance();
             for (File file : files) {
@@ -72,7 +81,7 @@ public class ParseAllPageTask {
             }
         }
         System.out.println("begin to store cache to database");
-        rm.storeCacheToDatabase();
+        rm.getDatabaseCache().batchSave();
         System.out.println("ParseAllPageTask done");
         System.out.println(String.format(
                 "parse page success %d, in parse range %d. total page count %d", parseSuccessCount,
@@ -91,6 +100,14 @@ public class ParseAllPageTask {
             }
         }
         return validFiles;
+    }
+    
+    private String getMinMiddleName(List<File> files) {
+        return files.get(0).getName().split("-")[2];
+    }
+    
+    private String getMaxMiddleName(List<File> files) {
+        return files.get(files.size() - 1).getName().split("-")[2];
     }
    
     

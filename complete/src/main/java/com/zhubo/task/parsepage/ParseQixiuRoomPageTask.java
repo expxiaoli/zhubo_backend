@@ -20,12 +20,13 @@ import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByMinutes;
+import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.DatabaseCache;
+import com.zhubo.global.DatabaseCache.PayPeriodObject;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
-import com.zhubo.helper.ModelHelper.PayPeriodObject;
 import com.zhubo.task.processdata.TimeUnit;
 
 public class ParseQixiuRoomPageTask extends BaseParsePageTask {
@@ -71,7 +72,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
 
     }
 
-    private void parseAndStoreMetric(Element root, Date pageDate) {        
+    private void parseAndStoreMetric(Element root, Date pageDate) {
         List<Element> itemElements = root.getChildren();
         Long anchorAliasId = null;
         String anchorName = null;
@@ -101,36 +102,39 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         }
 
         Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName);
-        
+
         for (Metric metric : metrics) {
-            if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchor.getAnchorId(), metric.type, pageDate)) {
-                System.out.println("save metric for anchorId: " + anchor.getAnchorId() + " ts: " + pageDate.toString());
+            if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchor.getAnchorId(),
+                    metric.type, pageDate)) {
                 AnchorMetricByMinutes metricByMinutes = new AnchorMetricByMinutes(
                         anchor.getAnchorId(), metric.type, metric.value, pageDate);
                 resourceManager.getDatabaseSession().save(metricByMinutes);
             }
         }
-        
+
         for (Pay pay : pays.values()) {
             Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
             if (pay.money != null) {
-                storePayPeriodAndPayMinute(resourceManager, audienceId,
-                        anchor.getAnchorId(), platformId, pay.money, pageDate);
+                storePayPeriodAndPayMinute(resourceManager, audienceId, anchor.getAnchorId(),
+                        platformId, pay.money, pageDate);
             }
         }
-        
+
         resourceManager.commit();
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
             int platformId, int periodMoney, Date ts) {
-        Map<Long, Map<Long, PayPeriodObject>> payPeriodCache = rm.getPayPeriodCache();
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
-        int diffMoney = ModelHelper.getDiffMoneyAndUpdatePayPeriodInCache(payPeriodCache, audienceId, anchorId, payPeriod);
-        if(diffMoney != 0) {
+        Integer diffMoney = resourceManager.getDatabaseCache()
+                .getDiffMoneyAndUpdateLatestPayPeriodInCache(audienceId, anchorId, payPeriod);
+        if (diffMoney != null && diffMoney != 0) {
             storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, diffMoney, ts);
+            storePayPeriodIfNeeded(rm, audienceId, anchorId, platformId, periodMoney, ts, periodStart);
+        } else if(diffMoney == null) {
+            storePayPeriodIfNeeded(rm, audienceId, anchorId, platformId, periodMoney, ts, periodStart);
         }
     }
 
@@ -142,6 +146,15 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             rm.getDatabaseSession().save(payByMinutes);
         }
     }
+    
+    private void storePayPeriodIfNeeded(ResourceManager rm, long audienceId, long anchorId,
+            int platformId, int money, Date ts, Date periodStart) {
+        if (!rm.getDatabaseCache().existInPayPeriod(audienceId, anchorId, ts)) {
+            AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
+                    money, ts, periodStart);
+            rm.getDatabaseSession().save(payPeriod);
+        }
+    }
 
     private Date getQixiuPayAggregateDate(Date ts) {
         return GeneralHelper.getAggregateDate(ts, TimeUnit.WEEK);
@@ -150,11 +163,12 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
     public static Long getAudienceIdOrNewOrUpdate(ResourceManager rm, int platformId,
             String audienceName, Long audienceAliasId) {
         DatabaseCache dbCache = rm.getDatabaseCache();
-        Long audienceIdInCache = dbCache.getIdFromAudienceAliasIdOrAudienceName(platformId, audienceAliasId, audienceName);
-        if(audienceIdInCache != null) {
+        Long audienceIdInCache = dbCache.getIdFromAudienceAliasIdOrAudienceName(platformId,
+                audienceAliasId, audienceName);
+        if (audienceIdInCache != null) {
             return audienceIdInCache;
         }
-        
+
         Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceName);
         if (oldAudience == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);

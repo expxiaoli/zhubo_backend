@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "AudiencePayPeriod_test_performance")
+@Table(name = "AudiencePayPeriod_3refine_0919")
 public class AudiencePayPeriod {
     @Id
     @GeneratedValue
@@ -95,12 +95,13 @@ public class AudiencePayPeriod {
     }
 
     public AudiencePayPeriod(Long audienceId, Long anchorId, Integer platformId, Integer money,
-            Date recordEffectiveTime, Date perriodStart, Date created, Date updated) {
+            Date recordEffectiveTime, Date periodStart, Date created, Date updated) {
         this.audienceId = audienceId;
         this.anchorId = anchorId;
         this.platformId = platformId;
         this.money = money;
         this.recordEffectiveTime = recordEffectiveTime;
+        this.periodStart = periodStart;
         this.created = created;
         this.updated = updated;
     }
