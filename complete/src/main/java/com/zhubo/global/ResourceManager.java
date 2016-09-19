@@ -1,7 +1,9 @@
 package com.zhubo.global;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -11,6 +13,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhubo.entity.Platform;
 import com.zhubo.helper.ModelHelper;
 import com.zhubo.helper.ModelHelper.PayPeriodObject;
@@ -24,6 +27,7 @@ public class ResourceManager {
     private static List<Platform> platforms = Lists.newArrayList(new Platform(1, "奇秀"));
 
     private Map<Long, Map<Long, PayPeriodObject>> payPeriodCache;
+    private DatabaseCache dbCache;
 
     public static ResourceManager generateResourceManager() {
         ResourceManager tmp = instance;
@@ -47,6 +51,11 @@ public class ResourceManager {
         initDatabase();
         initPlatform(this);
         initPayPeriodCache(this);
+    }
+    
+    public void initDatabaseCacheAndBatchLoad(Date minTs, Date maxTs) {
+        dbCache = new DatabaseCache(this, minTs, maxTs);
+        dbCache.batchLoad();
     }
 
     private void initDatabase() {
@@ -82,6 +91,11 @@ public class ResourceManager {
     
     public Map<Long, Map<Long, PayPeriodObject>> getPayPeriodCache() {
         return payPeriodCache;
+    }
+    
+    
+    public DatabaseCache getDatabaseCache() {
+        return dbCache;
     }
     
     public void storeCacheToDatabase() {

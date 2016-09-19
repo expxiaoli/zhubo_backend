@@ -65,6 +65,10 @@ public class Audience {
         return audienceAliasId;
     }
     
+    public Integer getPlatformId() {
+        return platformId;
+    }
+    
     public void setAudienceAliasId(long audienceAliasId) {
         this.audienceAliasId = audienceAliasId;
     }

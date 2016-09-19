@@ -1,11 +1,15 @@
 package com.zhubo.helper;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 import com.zhubo.task.processdata.TimeUnit;
 
 public class GeneralHelper {
+    
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss"); 
 
     public static Date getAggregateDate(Date date, TimeUnit unit) {
         switch (unit) {
@@ -14,9 +18,7 @@ public class GeneralHelper {
         case WEEK:
             int dayOfWeek = date.getDay();
             Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.YEAR, date.getYear());
-            cal.set(Calendar.MONTH, date.getMonth());
-            cal.set(Calendar.DAY_OF_MONTH, date.getDate());
+            cal.set(date.getYear() + 1900, date.getMonth(), date.getDate(), 0, 0, 0);
             cal.add(Calendar.DATE, -dayOfWeek);
             return cal.getTime();
         case MONTH:
@@ -24,5 +26,10 @@ public class GeneralHelper {
         default:
             return null;
         }
+    }
+    
+    
+    public static Date parseDateFromFileMiddleName(String fileMiddleName) throws ParseException {
+        return sdf.parse(fileMiddleName);
     }
 }

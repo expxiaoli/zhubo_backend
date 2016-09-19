@@ -9,7 +9,7 @@
     	<property name="hibernate.connection.url">jdbc:mysql://115.28.22.18:3306/zhubo_dev</property>
     	<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
     	<property name="hibernate.connection.pool.size">20</property>          
-        <property name="hibernate.show_sql">false</property>   
+        <property name="hibernate.show_sql">false</property>
         <property name="jdbc.fetch_size">50</property>   
         <property name="jdbc.batch_size">23</property>   
         <property name="jdbc.use_scrollable_resultset">false</property>   

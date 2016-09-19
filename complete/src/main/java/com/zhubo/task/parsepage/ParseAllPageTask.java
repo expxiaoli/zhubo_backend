@@ -3,28 +3,35 @@ package com.zhubo.task.parsepage;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.jdom.JDOMException;
 
 import com.google.common.collect.Lists;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
+import com.zhubo.helper.GeneralHelper;
 
 public class ParseAllPageTask {
 
     private List<Class> parsePageTaskFactoryClasses = Lists.newArrayList(
-            ParseQixiuPlatformPageFactory.class, 
+   //         ParseQixiuPlatformPageFactory.class, 
             ParseQixiuRoomPageFactory.class
             );
 
     @SuppressWarnings("unchecked")
-    public void run(String folderPath) throws InstantiationException, IllegalAccessException, IOException {
+    public void run(String folderPath) throws InstantiationException, IllegalAccessException, IOException, ParseException {
         File folder = new File(folderPath);
         ResourceManager rm = ResourceManager.generateResourceManager();
+        rm.initDatabaseCacheAndBatchLoad(
+                GeneralHelper.parseDateFromFileMiddleName("20160101000000"), 
+                GeneralHelper.parseDateFromFileMiddleName("20170101000000"));
         int parseSuccessCount = 0;
         int toParseCount = 0;
         int totalPageCount = folder.list().length;
@@ -109,10 +116,15 @@ public class ParseAllPageTask {
         }
         
     }
-/*
+
     public static void main(String[] args) throws JDOMException, IOException, ParseException,
             InstantiationException, IllegalAccessException {
+        long start = System.currentTimeMillis();
         new ParseAllPageTask().run(args[0]);
+        long end = System.currentTimeMillis();
+        long durationSecs = (end - start) / 1000;
+        System.out.println("use seconds:" + durationSecs);
+        
     }
-*/
+
 }

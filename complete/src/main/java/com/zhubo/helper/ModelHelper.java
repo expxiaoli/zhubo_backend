@@ -111,6 +111,8 @@ public class ModelHelper {
     }
     
     public static void setAllLatestPayPeriod(ResourceManager rm, Map<Long, Map<Long, PayPeriodObject>> cache, int platformId) {
+        int audienceCount = 0;
+        System.out.println(System.currentTimeMillis() + " payPeriodCache size:" + cache.keySet().size());
         for(Long audienceId : cache.keySet()) {
             Map<Long, PayPeriodObject> audienceCache = cache.get(audienceId);
             for(Long anchorId : audienceCache.keySet()) {
@@ -127,6 +129,10 @@ public class ModelHelper {
                     oldRecord.setRecordEffectiveDate(payPeriod.recordEffectiveTime);
                     rm.getDatabaseSession().update(oldRecord); 
                 }
+            }
+            audienceCount++;
+            if(audienceCount % 100 == 0) {
+                System.out.println(System.currentTimeMillis() + " save audience pay period:" + audienceCount);
             }
         }
         rm.commit();

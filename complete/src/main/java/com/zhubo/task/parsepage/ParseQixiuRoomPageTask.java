@@ -1,17 +1,12 @@
 package com.zhubo.task.parsepage;
 
-import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.exception.GenericJDBCException;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -25,8 +20,8 @@ import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByMinutes;
-import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.expcetion.PageFormatException;
+import com.zhubo.global.DatabaseCache;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
@@ -65,6 +60,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
                 Date pageDate = sdf.parse(dataStr);
                 Element allContItemElement = dataElement.getChild("cont_items");
                 parseAndStoreMetric(allContItemElement, pageDate);
+                long runEnd = System.currentTimeMillis();
                 return true;
             } catch (ParseException e) {
                 throw new PageFormatException("platform, time or type element is not existed");
@@ -75,7 +71,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
 
     }
 
-    private void parseAndStoreMetric(Element root, Date pageDate) {
+    private void parseAndStoreMetric(Element root, Date pageDate) {        
         List<Element> itemElements = root.getChildren();
         Long anchorAliasId = null;
         String anchorName = null;
@@ -105,21 +101,25 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         }
 
         Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName);
+        
         for (Metric metric : metrics) {
-            if (ModelHelper.getMetric(resourceManager, anchor.getAnchorId(), metric.type, pageDate) == null) {
+            if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchor.getAnchorId(), metric.type, pageDate)) {
+                System.out.println("save metric for anchorId: " + anchor.getAnchorId() + " ts: " + pageDate.toString());
                 AnchorMetricByMinutes metricByMinutes = new AnchorMetricByMinutes(
                         anchor.getAnchorId(), metric.type, metric.value, pageDate);
                 resourceManager.getDatabaseSession().save(metricByMinutes);
             }
         }
+        
         for (Pay pay : pays.values()) {
-            Audience audience = getAudienceOrNewOrUpdate(resourceManager, platformId,
+            Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
             if (pay.money != null) {
-                storePayPeriodAndPayMinute(resourceManager, audience.getAudienceId(),
+                storePayPeriodAndPayMinute(resourceManager, audienceId,
                         anchor.getAnchorId(), platformId, pay.money, pageDate);
             }
         }
+        
         resourceManager.commit();
     }
 
@@ -136,7 +136,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
 
     private void storeMinutePayIfNeeded(ResourceManager rm, long audienceId, long anchorId,
             int platformId, int money, Date ts) {
-        if (ModelHelper.getPay(rm, audienceId, anchorId, ts) == null) {
+        if (!rm.getDatabaseCache().existInPayByMinutes(audienceId, anchorId, ts)) {
             AudiencePayByMinutes payByMinutes = new AudiencePayByMinutes(audienceId, anchorId,
                     platformId, money, ts);
             rm.getDatabaseSession().save(payByMinutes);
@@ -147,21 +147,27 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         return GeneralHelper.getAggregateDate(ts, TimeUnit.WEEK);
     }
 
-    public static Audience getAudienceOrNewOrUpdate(ResourceManager rm, int platformId,
+    public static Long getAudienceIdOrNewOrUpdate(ResourceManager rm, int platformId,
             String audienceName, Long audienceAliasId) {
+        DatabaseCache dbCache = rm.getDatabaseCache();
+        Long audienceIdInCache = dbCache.getIdFromAudienceAliasIdOrAudienceName(platformId, audienceAliasId, audienceName);
+        if(audienceIdInCache != null) {
+            return audienceIdInCache;
+        }
+        
         Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceName);
         if (oldAudience == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
             rm.commit();
-            return newAudience;
+            return newAudience.getAudienceId();
         } else if (audienceAliasId != null && oldAudience.getAudienceAliasId() == null) {
             oldAudience.setAudienceAliasId(audienceAliasId);
             rm.getDatabaseSession().update(oldAudience);
             rm.commit();
-            return oldAudience;
+            return oldAudience.getAudienceId();
         } else {
-            return oldAudience;
+            return oldAudience.getAudienceId();
         }
     }
 

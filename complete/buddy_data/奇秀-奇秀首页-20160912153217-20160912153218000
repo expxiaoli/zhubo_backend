@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:Spider="urn:http://service.sina.com.cn/spider"><SOAP-ENV:Body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><Spider:PostDocument><document xsi:type="Spider:Document"><platform xsi:type="xsd:string"><![CDATA[奇秀]]></platform>
-<class xsi:type="xsd:string"><![CDATA[奇秀首页]]></class>
-<time xsi:type="xsd:string"><![CDATA[2016-9-12 15:32:17]]></time>
-<section xsi:type="xsd:string"><![CDATA[12]]></section>
-<cont_items><cont_item xsi:type="xsd:string"><room_number><![CDATA[110929]]></room_number></cont_item><cont_item xsi:type="xsd:string"><room_number><![CDATA[116095]]></room_number></cont_item><cont_item xsi:type="xsd:string"><room_number><![CDATA[112258]]></room_number></cont_item><cont_item xsi:type="xsd:string"><room_number><![CDATA[110929]]></room_number></cont_item><cont_item xsi:type="xsd:string"><room_number><![CDATA[116095]]></room_number></cont_item><cont_item xsi:type="xsd:string"><room_number><![CDATA[112258]]></room_number></cont_item></cont_items>
-</document></Spider:PostDocument></SOAP-ENV:Body></SOAP-ENV:Envelope> 
