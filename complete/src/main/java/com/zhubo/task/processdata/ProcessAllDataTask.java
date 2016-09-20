@@ -7,7 +7,7 @@ import com.zhubo.global.ResourceManager;
 
 public class ProcessAllDataTask {
     private static List<Class> processDataFactoryClasses = Lists.newArrayList(
-            ProcessQixiuAnchorIncomeByMinutesFactory.class
+//            ProcessQixiuAnchorIncomeByMinutesFactory.class
 //            ProcessQixiuMetricByDaysFactory.class
             );
     

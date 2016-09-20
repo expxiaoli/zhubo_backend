@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mysql.jdbc.StringUtils;
 import com.zhubo.entity.Anchor;
+import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByMinutes;
@@ -34,9 +35,11 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
     private static final String curPlatform = "奇秀";
     private static final String curClass = "主播房间";
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private Integer income;
 
     public ParseQixiuRoomPageTask(String filePath, ResourceManager resourceManager) {
         super(filePath, resourceManager);
+        income = 0;
     }
 
     public boolean run() throws JDOMException, IOException, PageFormatException {
@@ -121,6 +124,9 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             }
         }
 
+        if(income > 0) {
+            storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), income, pageDate);
+        }
         resourceManager.commit();
     }
 
@@ -129,8 +135,9 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
         Integer diffMoney = resourceManager.getDatabaseCache()
-                .getDiffMoneyAndUpdateLatestPayPeriodInCache(audienceId, anchorId, payPeriod);
+                .getDiffMoneyAndUpdateLatestPayPeriodInCache(audienceId, anchorId, payPeriod);        
         if (diffMoney != null && diffMoney != 0) {
+            income += diffMoney;
             storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, diffMoney, ts);
             storePayPeriodIfNeeded(rm, audienceId, anchorId, platformId, periodMoney, ts, periodStart);
         } else if(diffMoney == null) {
@@ -153,6 +160,13 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
                     money, ts, periodStart);
             rm.getDatabaseSession().save(payPeriod);
+        }
+    }
+    
+    private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int income, Date pageDate) {
+        if(!rm.getDatabaseCache().existInAnchorIncomeByMinutes(anchorId, pageDate)) {
+            AnchorIncomeByMinutes incomeByMinutes = new AnchorIncomeByMinutes(anchorId, platformId, income, pageDate);
+            rm.getDatabaseSession().save(incomeByMinutes);
         }
     }
 
