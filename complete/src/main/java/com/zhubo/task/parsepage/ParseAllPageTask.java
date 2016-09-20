@@ -95,7 +95,8 @@ public class ParseAllPageTask {
     private List<File> getValidFiles(File[] files) {
         List<File> validFiles = Lists.newArrayList();
         for(File file : files) {
-            if(file.getName().split("-").length == 4) {
+            String[] parts = file.getName().split("-");
+            if(parts.length == 4 && parts[2].length() == 14) {
                 validFiles.add(file);
             }
         }
