@@ -26,6 +26,7 @@ public class ParseAllPageTask {
 
     private Map<Integer, Class> parsePlatformPageFactoryClasses;
     private Map<Integer, Class> parseRoomPageFactoryClasses;
+    private Map<Class, List<File>> classToFilesMapping;
     private int maxPlatformId = 2;
     
 
@@ -62,6 +63,10 @@ public class ParseAllPageTask {
                 GeneralHelper.parseDateFromFileMiddleName(minMiddleName), 
                 GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));
         
+        
+        for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
+            List<>
+        }
         
         for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchInCache(platformId);

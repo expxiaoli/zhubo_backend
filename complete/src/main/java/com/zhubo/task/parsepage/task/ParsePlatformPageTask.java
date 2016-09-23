@@ -65,6 +65,8 @@ public class ParsePlatformPageTask extends BaseParsePageTask{
                 anchor.setArea(area);
                 anchor.setType(pageType);
                 resourceManager.getDatabaseSession().save(anchor);
+                resourceManager.getDatabaseCache().setAnchorObjectInCache(anchor.getAnchorAliasId(), new AnchorObject(
+                        anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
             } else if(anchorInCache.area == null || anchorInCache.type == null) {
                 Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class, anchorInCache.anchorId);
                 anchor.setArea(area);

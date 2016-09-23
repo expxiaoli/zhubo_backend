@@ -363,6 +363,10 @@ public class DatabaseCache {
         return anchorMapper.get(anchorAliasId);
     }
     
+    public void setAnchorObjectInCache(Long anchorAliasId, AnchorObject obj) {
+        anchorMapper.put(anchorAliasId, obj);
+    }
+    
     public boolean existInPayByMinutes(Long audienceId, Long anchorId, Date date) {
         Map<Long, Set<Date>> audiencePays = payByMinutesDatesMapper.get(audienceId);
         if(audiencePays == null) {
