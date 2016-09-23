@@ -61,12 +61,7 @@ public class ParseAllPageTask {
         
         rm.initDatabaseCacheAndBatchLoad(
                 GeneralHelper.parseDateFromFileMiddleName(minMiddleName), 
-                GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));
-        
-        
-        for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
-            List<>
-        }
+                GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));        
         
         for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchInCache(platformId);
