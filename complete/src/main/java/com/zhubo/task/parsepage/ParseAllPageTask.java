@@ -87,10 +87,10 @@ public class ParseAllPageTask {
         BaseParsePageTask task;
         factory = (BaseParsePageFactory) factoryClass.newInstance();
         for (File file : files) {
-            System.out.println("begin to parse " + file.getPath());
             boolean result = false;
             String fileName = file.getName();
             if (fileName.startsWith(factory.getFilePrefix())) {
+                System.out.println("begin to parse " + file.getPath());
                 toParseCount++;
                 try {
                     task = factory.create(file.getPath(), rm);
