@@ -1,4 +1,4 @@
-package com.zhubo.task.parsepage;
+package com.zhubo.task.parsepage.task;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,17 +12,14 @@ import org.jdom.input.SAXBuilder;
 
 import com.zhubo.entity.Anchor;
 import com.zhubo.expcetion.PageFormatException;
+import com.zhubo.global.DatabaseCache.AnchorObject;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.ModelHelper;
 
-public class ParseQixiuPlatformPageTask extends BaseParsePageTask{
-    public ParseQixiuPlatformPageTask(String filePath, ResourceManager resourceManager) {
-        super(filePath, resourceManager);
+public class ParsePlatformPageTask extends BaseParsePageTask{
+    public ParsePlatformPageTask(String filePath, ResourceManager resourceManager, int platformId) {
+        super(filePath, resourceManager, platformId);
     }
-
-    private static Integer platformId = 1;
-    private static final String curPlatform = "平台";
-    private static final String curClass = "奇秀广场";
 
     public boolean run() throws JDOMException, IOException, PageFormatException {
         SAXBuilder builder = new SAXBuilder();
@@ -58,21 +55,21 @@ public class ParseQixiuPlatformPageTask extends BaseParsePageTask{
 
     public void parseAndStoreAnchorContent(Element root, String pageType) {
         List<Element> itemElements = root.getChildren();
-        int count = 0;
         for (Element itemElement : itemElements) {
             Long roomNumber = Long.valueOf(itemElement.getChildText("room_number"));
             String nickName = itemElement.getChildText("nickname");
             String area = itemElement.getChildText("area");
-            Anchor oldAnchor = ModelHelper.getAnchor(resourceManager, platformId, roomNumber);
-            if (oldAnchor == null) {
+            AnchorObject anchorInCache = resourceManager.getDatabaseCache().getAnchorObjectFromCache(roomNumber);
+            if(anchorInCache == null) {
                 Anchor anchor = new Anchor(platformId, roomNumber, nickName);
                 anchor.setArea(area);
                 anchor.setType(pageType);
                 resourceManager.getDatabaseSession().save(anchor);
-                count++;
-            }
-            if (count % 10 == 0) {
-                resourceManager.commit();
+            } else if(anchorInCache.area == null || anchorInCache.type == null) {
+                Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class, anchorInCache.anchorId);
+                anchor.setArea(area);
+                anchor.setType(pageType);
+                resourceManager.getDatabaseSession().update(anchor);
             }
         }
         resourceManager.commit();

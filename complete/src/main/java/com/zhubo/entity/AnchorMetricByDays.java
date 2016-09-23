@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "AnchorMetricByDays")
+@Table(name = "AnchorMetricByDays_0923")
 public class AnchorMetricByDays {
     @Id
     @GeneratedValue
@@ -18,6 +18,9 @@ public class AnchorMetricByDays {
     
     @Column(name = "anchor_id")
     private Long anchorId;
+    
+    @Column(name = "platform_id")
+    private Integer platformId;
     
     @Column(name = "type")
     private String type;
@@ -35,8 +38,9 @@ public class AnchorMetricByDays {
         
     }
     
-    public AnchorMetricByDays(Long anchorId, String type, Integer value, Date recordEffectiveTime) {
+    public AnchorMetricByDays(Long anchorId, Integer platformId, String type, Integer value, Date recordEffectiveTime) {
         this.anchorId = anchorId;
+        this.platformId = platformId;
         this.type = type;
         this.value = value;
         this.recordEffectiveTime = recordEffectiveTime;

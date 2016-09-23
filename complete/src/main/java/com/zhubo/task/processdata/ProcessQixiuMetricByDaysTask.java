@@ -17,6 +17,7 @@ public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
 
     private static final int limit = 200;
     private TimeUnit timeUnit = TimeUnit.DAY;
+    private static Integer platformId = 1;
 
     private Map<Long, Map<String, Map<Date, Integer>>> metrics; // [anchor_id][type][date]
 
@@ -32,9 +33,11 @@ public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
         long maxAnchorId = 0;
         while (true) {
             Query query = resourceManager.getDatabaseSession()
-                    .createQuery("from AnchorMetricByMinutes where anchor_id > :lower_bound_id and anchor_id < :upper_bound_id");
+                    .createQuery("from AnchorMetricByMinutes where anchor_id > :lower_bound_id and anchor_id < :upper_bound_id"
+                            + " and platform_id = :platform_id");
             query.setParameter("lower_bound_id", lowerBoundId);
             query.setParameter("upper_bound_id", upperBoundId);
+            query.setParameter("platform_id", platformId);
             List<AnchorMetricByMinutes> records = query.list();
             if (records.size() == 0) {
                 break;
@@ -64,7 +67,7 @@ public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
             for (String type : anchorMetric.keySet()) {
                 Map<Date, Integer> typeMetric = anchorMetric.get(type);
                 for (Date date : typeMetric.keySet()) {
-                    AnchorMetricByDays byDays = new AnchorMetricByDays(anchorId, type, typeMetric.get(date), date);
+                    AnchorMetricByDays byDays = new AnchorMetricByDays(anchorId, platformId, type, typeMetric.get(date), date);
                     resourceManager.getDatabaseSession().save(byDays);
                 }
             }

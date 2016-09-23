@@ -1,12 +1,18 @@
-package com.zhubo.task.parsepage;
+package com.zhubo.task.parsepage.factory;
 
 import com.zhubo.global.ResourceManager;
+import com.zhubo.task.parsepage.task.BaseParsePageTask;
+import com.zhubo.task.parsepage.task.ParsePlatformPageTask;
 
 public class ParseQixiuPlatformPageFactory extends BaseParsePageFactory {
-
+    
+    static {
+        platformId = 1;
+    }
+    
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParseQixiuPlatformPageTask(filePath, resourceManager);
+        return new ParsePlatformPageTask(filePath, resourceManager, platformId);
     }
 
     @Override

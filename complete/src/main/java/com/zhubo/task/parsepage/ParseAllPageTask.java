@@ -5,36 +5,50 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.jdom.JDOMException;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
+import com.zhubo.task.parsepage.factory.BaseParsePageFactory;
+import com.zhubo.task.parsepage.factory.ParseLaifengPlatformPageFactory;
+import com.zhubo.task.parsepage.factory.ParseLaifengRoomPageFactory;
+import com.zhubo.task.parsepage.factory.ParseQixiuPlatformPageFactory;
+import com.zhubo.task.parsepage.factory.ParseQixiuRoomPageFactory;
+import com.zhubo.task.parsepage.task.BaseParsePageTask;
 
 public class ParseAllPageTask {
 
-    private List<Class> parsePageTaskFactoryClasses = Lists.newArrayList(
-            ParseQixiuPlatformPageFactory.class, 
-            ParseQixiuRoomPageFactory.class
-            );
+    private Map<Integer, Class> parsePlatformPageFactoryClasses;
+    private Map<Integer, Class> parseRoomPageFactoryClasses;
+    private int maxPlatformId = 2;
+    
+
+    public ParseAllPageTask() {
+        parsePlatformPageFactoryClasses = Maps.newHashMap();
+        parsePlatformPageFactoryClasses.put(1, ParseQixiuPlatformPageFactory.class);
+        parsePlatformPageFactoryClasses.put(2, ParseLaifengPlatformPageFactory.class);
+        
+        parseRoomPageFactoryClasses = Maps.newHashMap();
+        parseRoomPageFactoryClasses.put(1, ParseQixiuRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
+    }
+    
+    private int parseSuccessCount = 0;
+    private int toParseCount = 0;
+    private List<String> errorFilePaths = Lists.newArrayList();
+    
+    
 
     @SuppressWarnings("unchecked")
     public void run(String folderPath) throws InstantiationException, IllegalAccessException, IOException, ParseException {
         File folder = new File(folderPath);
         ResourceManager rm = ResourceManager.generateResourceManager();
-        int parseSuccessCount = 0;
-        int toParseCount = 0;
-        int totalPageCount = folder.list().length;
-        List<String> errorFilePaths = Lists.newArrayList();
-        BaseParsePageFactory factory;
-        BaseParsePageTask task;
         List<File> files = getValidFiles(folder.listFiles());
         Collections.sort(files, new byPageTimeComparator());
         
@@ -49,46 +63,52 @@ public class ParseAllPageTask {
                 GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));
         
         
-        for (Class factoryClass : parsePageTaskFactoryClasses) {
-            factory = (BaseParsePageFactory) factoryClass.newInstance();
-            for (File file : files) {
-                System.out.println("begin to parse " + file.getPath());
-                boolean result = false;
-                String fileName = file.getName();
-                if (fileName.startsWith(factory.getFilePrefix())) {
-                    toParseCount++;
-                    try {
-                        task = factory.create(file.getPath(), rm);
-                        result = task.run();
-                        if (result) {
-                            parseSuccessCount++;
-                        }
-                    } catch (JDOMException e) {
-                        errorFilePaths.add(file.getPath());
-                    } catch (PageFormatException e) {
-                        errorFilePaths.add(file.getPath());
-                    }
-                } else {
-                    System.out.println("ignore, can not be parsed with "
-                            + factory.getClass().getName());
-                }
-            }
-
-            if (toParseCount % 20 == 0) {
-                System.out.println(String.format(
-                        "parse page success %d, in parse range %d. total page count %d",
-                        parseSuccessCount, toParseCount, totalPageCount));
-            }
+        for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
+            rm.loadBatchInCache(platformId);
+            parseFiles(files, parsePlatformPageFactoryClasses.get(platformId), rm);
+            parseFiles(files, parseRoomPageFactoryClasses.get(platformId), rm);
+            rm.clearCache();
         }
+        
         System.out.println("begin to store cache to database");
         rm.getDatabaseCache().batchSave();
         System.out.println("ParseAllPageTask done");
         System.out.println(String.format(
                 "parse page success %d, in parse range %d. total page count %d", parseSuccessCount,
-                toParseCount, totalPageCount));
+                toParseCount, files.size()));
         System.out.println("error page:");
         for (String errorFilePath : errorFilePaths) {
             System.out.println(errorFilePath);
+        }
+    }
+    
+    private void parseFiles(List<File> files, Class factoryClass, ResourceManager rm) throws IOException, InstantiationException, IllegalAccessException {
+        BaseParsePageFactory factory;
+        BaseParsePageTask task;
+        factory = (BaseParsePageFactory) factoryClass.newInstance();
+        for (File file : files) {
+            System.out.println("begin to parse " + file.getPath());
+            boolean result = false;
+            String fileName = file.getName();
+            if (fileName.startsWith(factory.getFilePrefix())) {
+                toParseCount++;
+                try {
+                    task = factory.create(file.getPath(), rm);
+                    result = task.run();
+                    if (result) {
+                        parseSuccessCount++;
+                    }
+                } catch (JDOMException e) {
+                    errorFilePaths.add(file.getPath());
+                } catch (PageFormatException e) {
+                    errorFilePaths.add(file.getPath());
+                }
+            }
+            if (toParseCount % 20 == 0) {
+                System.out.println(String.format(
+                        "parse page success %d, in parse range %d. total page count %d",
+                        parseSuccessCount, toParseCount, files.size()));
+            }
         }
     }
     

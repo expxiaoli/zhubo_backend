@@ -10,6 +10,7 @@ import org.hibernate.Session;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
@@ -17,20 +18,19 @@ import com.zhubo.entity.AudiencePayByMinutes;
 import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.helper.ModelHelper;
 
-public class DatabaseCache {
-    private static final int maxPlatformId = 1;
-    
+public class DatabaseCache {    
     private ResourceManager rm;
     private Date minTs;
     private Date maxTs;
     
-    private Map<Integer, Map<Long, Long>> audienceAliasIdToIdMapper;
-    private Map<Integer, Map<String, Long>> audienceNameToIdMapper;
+    private Map<Long, AnchorObject> anchorMapper;
+    private Map<Long, Long> audienceAliasIdToIdMapper;
+    private Map<String, Long> audienceNameToIdMapper;
     private Map<Long, Map<Long, Set<Date>>> payByMinutesDatesMapper;
     private Map<Long, Map<String, Set<Date>>> metricByMinutesDatesMapper;
-    Map<Long, Map<Long, PayPeriodObject>> latestPayPeriodMapper;
-    Map<Long, Map<Long, Set<Date>>> payPeriodDatesMapper;
-    Map<Long, Set<Date>> anchorIncomeByMinutesMapper;
+    private Map<Long, Map<Long, PayPeriodObject>> latestPayPeriodMapper;
+    private Map<Long, Map<Long, Set<Date>>> payPeriodDatesMapper;
+    private Map<Long, Set<Date>> anchorIncomeByMinutesMapper;
     
     public static class PayPeriodObject {
         public int platformId;
@@ -45,56 +45,102 @@ public class DatabaseCache {
         }
     }
     
+    public static class AnchorObject {
+        public long anchorId;
+        public String area;
+        public String type;        
+        
+        public AnchorObject(long anchorId, String area, String type) {
+            this.anchorId = anchorId;
+            this.area = area;
+            this.type = type;
+        }
+    }
+    
     public DatabaseCache(ResourceManager rm, Date minTs, Date maxTs) {
         this.rm = rm;
         this.minTs = minTs;
         this.maxTs = maxTs;
     }
     
-    public void batchLoad() {
-        batchLoadAudienceData();
-        batchLoadPayByMinutes();
-        batchLoadMetricByMinutes();
-        batchLoadLatestPayPeriod(1);
-        batchLoadPayPeriodDates(1);
-        batchLoadAnchorIncomeByMinutes(1);
+    public void batchLoad(int platformId) {
+        batchLoadAudienceData(platformId);
+        batchLoadAnchorData(platformId);
+        batchLoadPayByMinutes(platformId);
+        batchLoadMetricByMinutes(platformId);
+        batchLoadLatestPayPeriod(platformId);
+        batchLoadPayPeriodDates(platformId);
+        batchLoadAnchorIncomeByMinutes(platformId);
+    }
+    
+    public void clearDate() {
+        clearAudienceData();
+        clearAnchorData();
+        clearPayByMinutes();
+        clearMetricByMinutes();
+        clearLatestPayPeriod();
+        clearPayPeriodDates();
+        clearAnchorIncomeByMinutes();
     }
     
     public void batchSave() {
     }
     
-    private void batchLoadAudienceData() {
+    private void batchLoadAudienceData(int platformId) {
         audienceAliasIdToIdMapper = Maps.newHashMap();
         audienceNameToIdMapper = Maps.newHashMap();
-        for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
-            audienceAliasIdToIdMapper.put(platformId, Maps.newHashMap());
-            audienceNameToIdMapper.put(platformId,  Maps.newHashMap());
-        }
         
         Session session = rm.getDatabaseSession();
-        Query query = session.createQuery("from Audience");
+        Query query = session.createQuery("from Audience where platform_id = :platform_id");
+        query.setParameter("platform_id", platformId);
         List<Audience> audiences = query.list();
         for(Audience audience : audiences) {
-            int platformId = audience.getPlatformId();
             Long audienceAliasId = audience.getAudienceAliasId();
             String audienceName = audience.getAudienceName();
             Long audienceId = audience.getAudienceId();
             if(audienceAliasId != null) {
-                audienceAliasIdToIdMapper.get(platformId).put(audienceAliasId, audienceId);                
+                audienceAliasIdToIdMapper.put(audienceAliasId, audienceId);                
             }
             if(audienceName != null) {
-                audienceNameToIdMapper.get(platformId).put(audienceName, audienceId);
+                audienceNameToIdMapper.put(audienceName, audienceId);
             }
         }
         System.out.println("batchLoadAudienceData done");
     }
     
-    private void batchLoadPayByMinutes() {
+    private void clearAudienceData() {
+        audienceAliasIdToIdMapper.clear();
+        audienceAliasIdToIdMapper = null;
+        audienceNameToIdMapper.clear();
+        audienceAliasIdToIdMapper = null;
+        System.out.println("clearAudienceData done");
+    }
+    
+    private void batchLoadAnchorData(int platformId) {
+        anchorMapper = Maps.newHashMap();
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from Anchor where platform_id = :platform_id");
+        query.setParameter("platform_id", platformId);
+        List<Anchor> records = query.list();
+        for(Anchor record : records) {
+            AnchorObject obj = new AnchorObject(record.getAnchorId(), record.getArea(), record.getType());
+            anchorMapper.put(record.getAnchorAliasId(), obj);
+        }
+        System.out.println("batchLoadAnchorData done");
+    }
+    
+    private void clearAnchorData() {
+        anchorMapper.clear();
+        anchorMapper = null;
+    }
+    
+    private void batchLoadPayByMinutes(int platformId) {
         payByMinutesDatesMapper = Maps.newHashMap();
         Session session = rm.getDatabaseSession();
-        Query query = session.createQuery("from AudiencePayByMinutes where record_effective_time >= :min_ts and record_effective_time <= :max_ts");
+        Query query = session.createQuery("from AudiencePayByMinutes where record_effective_time >= :min_ts and record_effective_time <= :max_ts and platform_id = :platform_id");
         query.setParameter("min_ts", minTs);
         query.setParameter("max_ts", maxTs);
+        query.setParameter("platform_id", platformId);
         List<AudiencePayByMinutes> payByMinutes = query.list();
         for(AudiencePayByMinutes pay : payByMinutes) {
             Map<Long, Set<Date>> audiencePayMapper = payByMinutesDatesMapper.get(pay.getAudienceId());
@@ -112,12 +158,19 @@ public class DatabaseCache {
         System.out.println("batchLoadPayByMinutes done");
     }
     
-    private void batchLoadMetricByMinutes() {
+    private void clearPayByMinutes() {
+        payByMinutesDatesMapper.clear();
+        payByMinutesDatesMapper = null;
+    }
+    
+    private void batchLoadMetricByMinutes(int platformId) {
         metricByMinutesDatesMapper = Maps.newHashMap();
         Session session = rm.getDatabaseSession();
-        Query query = session.createQuery("from AnchorMetricByMinutes where record_effective_time >= :min_ts and record_effective_time <= :max_ts");
+        Query query = session.createQuery("from AnchorMetricByMinutes where record_effective_time >= :min_ts and record_effective_time <= :max_ts"
+                + " and platform_id = :platform_id");
         query.setParameter("min_ts", minTs);
         query.setParameter("max_ts", maxTs);
+        query.setParameter("platform_id", platformId);
         List<AnchorMetricByMinutes> metricByMinutes = query.list();
         for(AnchorMetricByMinutes metric : metricByMinutes) {
             Map<String, Set<Date>> anchorMetricMapper = metricByMinutesDatesMapper.get(metric.getAnchorId());
@@ -133,6 +186,11 @@ public class DatabaseCache {
             dates.add(metric.getRecordEffectiveTime());
         }
         System.out.println("batchLoadMetricByMinutes done");
+    }
+    
+    private void clearMetricByMinutes() {
+        metricByMinutesDatesMapper.clear();
+        metricByMinutesDatesMapper = null;   
     }
     
     private void batchLoadLatestPayPeriod(int platformId) {
@@ -160,6 +218,11 @@ public class DatabaseCache {
         }
     }
     
+    private void clearLatestPayPeriod() {
+        latestPayPeriodMapper.clear();
+        latestPayPeriodMapper = null;
+    }
+    
     private void batchLoadPayPeriodDates(int platformId) {
         payPeriodDatesMapper = Maps.newHashMap();
         Session session = rm.getDatabaseSession();
@@ -184,6 +247,11 @@ public class DatabaseCache {
         System.out.println("batchLoadPayPeriodDates done");
     }
     
+    private void clearPayPeriodDates() {
+        payPeriodDatesMapper.clear();
+        payPeriodDatesMapper = null;
+    }
+    
     private void batchLoadAnchorIncomeByMinutes(int platformId) {
         anchorIncomeByMinutesMapper = Maps.newHashMap();
         Session session = rm.getDatabaseSession();
@@ -203,6 +271,11 @@ public class DatabaseCache {
             }
         }
         System.out.println("batchLoadAnchorIncomeByMinutes done");
+    }
+    
+    private void clearAnchorIncomeByMinutes() {
+        anchorIncomeByMinutesMapper.clear();
+        anchorIncomeByMinutesMapper = null;
     }
     
     public Integer getDiffMoneyAndUpdateLatestPayPeriodInCache(long audienceId, long anchorId, PayPeriodObject payPeriod) {
@@ -286,6 +359,9 @@ public class DatabaseCache {
         }  
     }
     
+    public AnchorObject getAnchorObjectFromCache(Long anchorAliasId) {
+        return anchorMapper.get(anchorAliasId);
+    }
     
     public boolean existInPayByMinutes(Long audienceId, Long anchorId, Date date) {
         Map<Long, Set<Date>> audiencePays = payByMinutesDatesMapper.get(audienceId);
@@ -350,11 +426,11 @@ public class DatabaseCache {
     }
     
     private Long getIdFromAudienceAliasId(int platformId, long aliasId) {
-        return audienceAliasIdToIdMapper.get(platformId).get(aliasId);
+        return audienceAliasIdToIdMapper.get(aliasId);
     }
     
     private Long getIdFromAudienceName(int platformId, String audienceName) {
-        return audienceNameToIdMapper.get(platformId).get(audienceName);
+        return audienceNameToIdMapper.get(audienceName);
     }
     
 }

@@ -1,4 +1,4 @@
-package com.zhubo.task.parsepage;
+package com.zhubo.task.parsepage.task;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -30,15 +30,12 @@ import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 import com.zhubo.task.processdata.TimeUnit;
 
-public class ParseQixiuRoomPageTask extends BaseParsePageTask {
-    private static Integer platformId = 1;
-    private static final String curPlatform = "奇秀";
-    private static final String curClass = "主播房间";
+public class ParseRoomPageTask extends BaseParsePageTask {
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private Integer income;
 
-    public ParseQixiuRoomPageTask(String filePath, ResourceManager resourceManager) {
-        super(filePath, resourceManager);
+    public ParseRoomPageTask(String filePath, ResourceManager resourceManager, int platformId) {
+        super(filePath, resourceManager, platformId);
         income = 0;
     }
 
@@ -57,20 +54,16 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
                 .getChild("document");
 
         String pageClass = dataElement.getChild("class").getValue();
-        if (pageClass.equals(curClass)) {
-            try {
-                String pagePlatform = dataElement.getChild("platform").getValue();
-                String dataStr = dataElement.getChild("date").getValue();
-                Date pageDate = sdf.parse(dataStr);
-                Element allContItemElement = dataElement.getChild("cont_items");
-                parseAndStoreMetric(allContItemElement, pageDate);
-                long runEnd = System.currentTimeMillis();
-                return true;
-            } catch (ParseException e) {
-                throw new PageFormatException("platform, time or type element is not existed");
-            }
-        } else {
-            return false;
+        try {
+            String pagePlatform = dataElement.getChild("platform").getValue();
+            String dataStr = dataElement.getChild("date").getValue();
+            Date pageDate = sdf.parse(dataStr);
+            Element allContItemElement = dataElement.getChild("cont_items");
+            parseAndStoreMetric(allContItemElement, pageDate);
+            long runEnd = System.currentTimeMillis();
+            return true;
+        } catch (ParseException e) {
+            throw new PageFormatException("platform, time or type element is not existed");
         }
 
     }
@@ -110,7 +103,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchor.getAnchorId(),
                     metric.type, pageDate)) {
                 AnchorMetricByMinutes metricByMinutes = new AnchorMetricByMinutes(
-                        anchor.getAnchorId(), metric.type, metric.value, pageDate);
+                        anchor.getAnchorId(), platformId, metric.type, metric.value, pageDate);
                 resourceManager.getDatabaseSession().save(metricByMinutes);
             }
         }
@@ -124,7 +117,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             }
         }
 
-        if(income > 0) {
+        if (income > 0) {
             storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), income, pageDate);
         }
         resourceManager.commit();
@@ -135,13 +128,15 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
         Integer diffMoney = resourceManager.getDatabaseCache()
-                .getDiffMoneyAndUpdateLatestPayPeriodInCache(audienceId, anchorId, payPeriod);        
+                .getDiffMoneyAndUpdateLatestPayPeriodInCache(audienceId, anchorId, payPeriod);
         if (diffMoney != null && diffMoney != 0) {
             income += diffMoney;
             storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, diffMoney, ts);
-            storePayPeriodIfNeeded(rm, audienceId, anchorId, platformId, periodMoney, ts, periodStart);
-        } else if(diffMoney == null) {
-            storePayPeriodIfNeeded(rm, audienceId, anchorId, platformId, periodMoney, ts, periodStart);
+            storePayPeriodIfNeeded(rm, audienceId, anchorId, platformId, periodMoney, ts,
+                    periodStart);
+        } else if (diffMoney == null) {
+            storePayPeriodIfNeeded(rm, audienceId, anchorId, platformId, periodMoney, ts,
+                    periodStart);
         }
     }
 
@@ -153,7 +148,7 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             rm.getDatabaseSession().save(payByMinutes);
         }
     }
-    
+
     private void storePayPeriodIfNeeded(ResourceManager rm, long audienceId, long anchorId,
             int platformId, int money, Date ts, Date periodStart) {
         if (!rm.getDatabaseCache().existInPayPeriod(audienceId, anchorId, ts)) {
@@ -162,10 +157,12 @@ public class ParseQixiuRoomPageTask extends BaseParsePageTask {
             rm.getDatabaseSession().save(payPeriod);
         }
     }
-    
-    private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int income, Date pageDate) {
-        if(!rm.getDatabaseCache().existInAnchorIncomeByMinutes(anchorId, pageDate)) {
-            AnchorIncomeByMinutes incomeByMinutes = new AnchorIncomeByMinutes(anchorId, platformId, income, pageDate);
+
+    private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int income,
+            Date pageDate) {
+        if (!rm.getDatabaseCache().existInAnchorIncomeByMinutes(anchorId, pageDate)) {
+            AnchorIncomeByMinutes incomeByMinutes = new AnchorIncomeByMinutes(anchorId, platformId,
+                    income, pageDate);
             rm.getDatabaseSession().save(incomeByMinutes);
         }
     }

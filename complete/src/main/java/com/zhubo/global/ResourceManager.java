@@ -23,7 +23,10 @@ public class ResourceManager {
     private Transaction transaction;
     private static volatile ResourceManager instance = null;
     private static final Object lock = new Object();
-    private static List<Platform> platforms = Lists.newArrayList(new Platform(1, "奇秀"));
+    private static List<Platform> platforms = Lists.newArrayList(
+            new Platform(1, "奇秀"),
+            new Platform(2, "来疯")
+            );
     private DatabaseCache dbCache;
 
     public static ResourceManager generateResourceManager() {
@@ -51,7 +54,14 @@ public class ResourceManager {
     
     public void initDatabaseCacheAndBatchLoad(Date minTs, Date maxTs) {
         dbCache = new DatabaseCache(this, minTs, maxTs);
-        dbCache.batchLoad();
+    }
+    
+    public void loadBatchInCache(int platformId) {
+        dbCache.batchLoad(platformId);
+    }
+    
+    public void clearCache() {
+        dbCache.clearDate();
     }
 
     private void initDatabase() {

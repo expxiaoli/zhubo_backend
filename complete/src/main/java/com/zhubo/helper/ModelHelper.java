@@ -16,7 +16,7 @@ import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.entity.Platform;
 import com.zhubo.global.DatabaseCache.PayPeriodObject;
 import com.zhubo.global.ResourceManager;
-import com.zhubo.task.parsepage.ParseQixiuRoomPageTask.Pay;
+import com.zhubo.task.parsepage.task.ParseRoomPageTask.Pay;
 
 public class ModelHelper {
     
