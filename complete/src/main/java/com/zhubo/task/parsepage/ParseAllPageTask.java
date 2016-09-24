@@ -154,7 +154,7 @@ public class ParseAllPageTask {
         }
         
     }
-
+/*
     public static void main(String[] args) throws JDOMException, IOException, ParseException,
             InstantiationException, IllegalAccessException {
         long start = System.currentTimeMillis();
@@ -164,5 +164,5 @@ public class ParseAllPageTask {
         System.out.println("use seconds:" + durationSecs);
         
     }
-
+*/
 }

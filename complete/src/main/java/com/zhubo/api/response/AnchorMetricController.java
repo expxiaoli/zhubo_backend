@@ -28,7 +28,6 @@ import com.zhubo.global.ResourceManager;
 @RestController
 public class AnchorMetricController {
 
-    private final Session session = ResourceManager.generateResourceManager().getDatabaseSession();
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     private final int maxTopAudience = 7;
 
@@ -38,6 +37,7 @@ public class AnchorMetricController {
             @RequestParam(value = "end") String end) throws ParseException {
         Date startDate = sdf.parse(start);
         Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
         Query query = session
                 .createQuery("from AnchorMetricByMinutes where anchor_id = :anchor_id and type = :type "
                         + "and record_effective_time >= :start_date and record_effective_time < :end_date");
@@ -50,6 +50,7 @@ public class AnchorMetricController {
         for (AnchorMetricByMinutes metric : metrics) {
             items.add(new MetricItem(metric.getValue(), metric.getRecordEffectiveTime()));
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AnchorMetricResponse(anchorId, type, items);
     }
 
@@ -59,6 +60,7 @@ public class AnchorMetricController {
             @RequestParam(value = "end") String end) throws ParseException {
         Date startDate = sdf.parse(start);
         Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
         Query query = session
                 .createQuery("from AnchorMetricByDays where anchor_id = :anchor_id and type = :type "
                         + "and record_effective_time >= :start_date and record_effective_time < :end_date");
@@ -71,6 +73,7 @@ public class AnchorMetricController {
         for (AnchorMetricByDays metric : metrics) {
             items.add(new MetricItem(metric.getValue(), metric.getRecordEffectiveTime()));
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AnchorMetricResponse(anchorId, type, items);
     }
 
@@ -80,6 +83,7 @@ public class AnchorMetricController {
             throws ParseException {
         Date startDate = sdf.parse(start);
         Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
         Query query = session
                 .createQuery("from AnchorIncomeByMinutes where anchor_id = :anchor_id "
                         + "and record_effective_time >= :start_date and record_effective_time < :end_date");
@@ -91,6 +95,7 @@ public class AnchorMetricController {
         for (AnchorIncomeByMinutes metric : metrics) {
             items.add(new MetricItem(metric.getMoney(), metric.getRecordEffectiveTime()));
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AnchorIncomeResponse(anchorId, items);
     }
 
@@ -100,6 +105,7 @@ public class AnchorMetricController {
             @RequestParam(value = "start") String start, @RequestParam(value = "end") String end) throws ParseException {
         Date startDate = sdf.parse(start);
         Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
         Query query = session.createQuery("from AudiencePayByMinutes where anchor_id = :anchor_id "
                 + "and record_effective_time >= :start_date and record_effective_time < :end_date");
         query.setParameter("anchor_id", anchorId);
@@ -144,7 +150,7 @@ public class AnchorMetricController {
 
         int count = 0;
         List<AudiencePayItem> payItems = Lists.newArrayList();
-        while (count < maxTopAudience) {
+        while (count < maxTopAudience && count < totalPays.size()) {
             long audienceId = ((AudienceTotalPay) totalPays.get(count)).audienceId;
             int totalPay = totalPaysByAudience.get(audienceId);
             Date lastPayTime = lastPayTimeByAudience.get(audienceId);
@@ -161,7 +167,7 @@ public class AnchorMetricController {
 
             count++;
         }
-
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AnchorIncomeDetailResponse(payItems);
     }
 
