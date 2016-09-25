@@ -15,6 +15,7 @@ import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByDays;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
+import com.zhubo.entity.AudiencePayByDays;
 import com.zhubo.entity.AudiencePayByMinutes;
 import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.helper.ModelHelper;
@@ -34,6 +35,7 @@ public class DatabaseCache {
     private Map<Long, Set<Date>> anchorIncomeByMinutesMapper;
     
     private Map<Long, Map<String, Set<Date>>> metricByDaysDatesMapper;
+    private Map<Long, Map<Long, Set<Date>>> audiencePayByDaysDatesMapper;
     
     public static class PayPeriodObject {
         public int platformId;
@@ -78,6 +80,7 @@ public class DatabaseCache {
     
     public void batchLoadProcessData(int platformId) {
         batchLoadMetricByDays(platformId);
+        batchLoadAudiencePayByDays(platformId);
     }
     
     public void clearParsePageData() {
@@ -92,6 +95,7 @@ public class DatabaseCache {
     
     public void clearProcessData() {
         clearMetricByDays();
+        clearAudiencePayByDays();
     }
     
     public void batchSave() {
@@ -486,6 +490,43 @@ public class DatabaseCache {
             return false;
         }
         return dates.contains(ts);
+    }
+    
+    private void batchLoadAudiencePayByDays(int platformId) {
+        audiencePayByDaysDatesMapper = Maps.newHashMap();
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AudiencePayByDays where platform_id = :platform_id and record_effective_time >= :min_ts and record_effective_time <= :max_ts");
+        query.setParameter("min_ts", minTs);
+        query.setParameter("max_ts", maxTs);
+        query.setParameter("platform_id", platformId);
+        List<AudiencePayByDays> records = query.list();
+        for(AudiencePayByDays record : records) {
+            Map<Long, Set<Date>> audienceMetricMapper = audiencePayByDaysDatesMapper.get(record.getAudienceId());
+            if(audienceMetricMapper == null) {
+                audiencePayByDaysDatesMapper.put(record.getAudienceId(), Maps.newHashMap());
+                audienceMetricMapper = audiencePayByDaysDatesMapper.get(record.getAudienceId());
+            }
+            Set<Date> dates = audienceMetricMapper.get(record.getAnchorId());
+            if(dates == null) {
+                audienceMetricMapper.put(record.getAnchorId(), Sets.newHashSet());
+                dates = audienceMetricMapper.get(record.getAnchorId());
+            }
+            dates.add(record.getRecordEffectiveTime());
+        }
+        System.out.println("batchLoadAudiencePayByDays done");
+    }
+    
+    private void clearAudiencePayByDays() {
+        audiencePayByDaysDatesMapper.clear();
+    }
+    
+    public boolean existInAudiencePayByDays(Long audienceId, Long anchorId, Date ts) {
+        Map<Long, Set<Date>> audiencePayMapper = audiencePayByDaysDatesMapper.get(audienceId);
+        if(audiencePayMapper == null) {
+            return false;
+        }
+        Set<Date> dates = audiencePayMapper.get(anchorId);
+        return dates != null && dates.contains(ts);
     }
     
 }

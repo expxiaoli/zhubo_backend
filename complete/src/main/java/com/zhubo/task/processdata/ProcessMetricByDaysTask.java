@@ -15,7 +15,7 @@ import com.zhubo.helper.GeneralHelper;
 
 public class ProcessMetricByDaysTask extends BaseProcessDataTask {
 
-    private static final int limit = 5000;
+    private static final int limit = 20000;
     private TimeUnit timeUnit = TimeUnit.DAY; 
 
     private Map<Long, Map<String, Map<Date, Integer>>> metrics; // [anchor_id][type][date]
@@ -57,7 +57,6 @@ public class ProcessMetricByDaysTask extends BaseProcessDataTask {
                     maxAnchorId = anchorId;
                 }
             }
-            System.out.println("max anchor id: " + maxAnchorId);
             if(isLastAnchor()) {
                 storeMetric();
                 clearMetric();
