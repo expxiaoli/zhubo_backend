@@ -13,31 +13,35 @@ import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 
-public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
+public class ProcessMetricByDaysTask extends BaseProcessDataTask {
 
-    private static final int limit = 200;
-    private TimeUnit timeUnit = TimeUnit.DAY;
-    private static Integer platformId = 1;
+    private static final int limit = 5000;
+    private TimeUnit timeUnit = TimeUnit.DAY; 
 
     private Map<Long, Map<String, Map<Date, Integer>>> metrics; // [anchor_id][type][date]
 
-    public ProcessQixiuMetricByDaysTask(ResourceManager rm) {
-        super(rm);
+    public ProcessMetricByDaysTask(ResourceManager rm, int platformId) {
+        super(rm, platformId);
     }
-
+    
     @Override
     public boolean run() {
         metrics = Maps.newHashMap();
         long lowerBoundId = 0;
-        long upperBoundId = lowerBoundId + limit;
         long maxAnchorId = 0;
         while (true) {
+            System.out.println(String.format("begin to process metric for platform %d, id after %d", platformId, lowerBoundId));
             Query query = resourceManager.getDatabaseSession()
-                    .createQuery("from AnchorMetricByMinutes where anchor_id > :lower_bound_id and anchor_id < :upper_bound_id"
-                            + " and platform_id = :platform_id");
+                    .createQuery("from AnchorMetricByMinutes where anchor_id > :lower_bound_id"
+                            + " and platform_id = :platform_id and "
+                            + " record_effective_time > :min_time and record_effective_time < :max_time order by anchor_id asc");
             query.setParameter("lower_bound_id", lowerBoundId);
-            query.setParameter("upper_bound_id", upperBoundId);
+            query.setMaxResults(limit);
             query.setParameter("platform_id", platformId);
+            Date minTime = (start == null) ? new Date(0, 1, 1) : start;
+            Date maxTime = (end == null) ? new Date(2100-1900, 1, 1) : end;
+            query.setParameter("min_time", minTime);
+            query.setParameter("max_time", maxTime);
             List<AnchorMetricByMinutes> records = query.list();
             if (records.size() == 0) {
                 break;
@@ -53,12 +57,28 @@ public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
                     maxAnchorId = anchorId;
                 }
             }
-            storeMetric();
-            clearMetric();
-            lowerBoundId = maxAnchorId;
-            upperBoundId = lowerBoundId + limit;
+            System.out.println("max anchor id: " + maxAnchorId);
+            if(isLastAnchor()) {
+                storeMetric();
+                clearMetric();
+                break;
+            } else {
+                removeFromMetric(maxAnchorId);
+                storeMetric();
+                clearMetric();
+                lowerBoundId = maxAnchorId - 1;
+            }
         }
+        System.out.println(String.format("process metric for platform %d done", platformId));
         return true;
+    }
+    
+    private void removeFromMetric(Long anchorId) {
+        metrics.remove(anchorId);
+    }
+    
+    private boolean isLastAnchor() {
+        return metrics.keySet().size() == 1;
     }
 
     private void storeMetric() {
@@ -100,5 +120,6 @@ public class ProcessQixiuMetricByDaysTask extends BaseProcessDataTask {
         int newCount = oldCount > count ? oldCount : count;
         typeMetric.put(date, newCount);
     }
+    
 
 }

@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorIncomeByMinutes;
+import com.zhubo.entity.AnchorMetricByDays;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByMinutes;
@@ -31,6 +32,8 @@ public class DatabaseCache {
     private Map<Long, Map<Long, PayPeriodObject>> latestPayPeriodMapper;
     private Map<Long, Map<Long, Set<Date>>> payPeriodDatesMapper;
     private Map<Long, Set<Date>> anchorIncomeByMinutesMapper;
+    
+    private Map<Long, Map<String, Set<Date>>> metricByDaysDatesMapper;
     
     public static class PayPeriodObject {
         public int platformId;
@@ -63,7 +66,7 @@ public class DatabaseCache {
         this.maxTs = maxTs;
     }
     
-    public void batchLoad(int platformId) {
+    public void batchLoadParsePageData(int platformId) {
         batchLoadAudienceData(platformId);
         batchLoadAnchorData(platformId);
         batchLoadPayByMinutes(platformId);
@@ -73,7 +76,11 @@ public class DatabaseCache {
         batchLoadAnchorIncomeByMinutes(platformId);
     }
     
-    public void clearDate() {
+    public void batchLoadProcessData(int platformId) {
+        batchLoadMetricByDays(platformId);
+    }
+    
+    public void clearParsePageData() {
         clearAudienceData();
         clearAnchorData();
         clearPayByMinutes();
@@ -81,6 +88,10 @@ public class DatabaseCache {
         clearLatestPayPeriod();
         clearPayPeriodDates();
         clearAnchorIncomeByMinutes();
+    }
+    
+    public void clearProcessData() {
+        clearMetricByDays();
     }
     
     public void batchSave() {
@@ -435,6 +446,46 @@ public class DatabaseCache {
     
     private Long getIdFromAudienceName(int platformId, String audienceName) {
         return audienceNameToIdMapper.get(audienceName);
+    }
+    
+    private void batchLoadMetricByDays(int platformId) {
+        metricByDaysDatesMapper = Maps.newHashMap();
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AnchorMetricByDays where platform_id = :platform_id and record_effective_time >= :min_ts and record_effective_time <= :max_ts");
+        query.setParameter("min_ts", minTs);
+        query.setParameter("max_ts", maxTs);
+        query.setParameter("platform_id", platformId);
+        List<AnchorMetricByDays> records = query.list();
+        for(AnchorMetricByDays record : records) {
+            Map<String, Set<Date>> anchorMetricMapper = metricByDaysDatesMapper.get(record.getAnchorId());
+            if(anchorMetricMapper == null) {
+                metricByDaysDatesMapper.put(record.getAnchorId(), Maps.newHashMap());
+                anchorMetricMapper = metricByDaysDatesMapper.get(record.getAnchorId());
+            }
+            Set<Date> dates = anchorMetricMapper.get(record.getType());
+            if(dates == null) {
+                anchorMetricMapper.put(record.getType(), Sets.newHashSet());
+                dates = anchorMetricMapper.get(record.getType());
+            }
+            dates.add(record.getRecordEffectiveTime());
+        }
+        System.out.println("batchLoadMetricByDays done");
+    }
+    
+    private void clearMetricByDays() {
+        metricByDaysDatesMapper.clear();
+    }
+    
+    public boolean existInAnchorMetricByDays(Long anchorId, String type, Date ts) {
+        Map<String, Set<Date>> anchorMetricMapper = metricByDaysDatesMapper.get(anchorId);
+        if(anchorMetricMapper == null) {
+            return false;
+        }
+        Set<Date> dates = anchorMetricMapper.get(type);
+        if(dates == null) {
+            return false;
+        }
+        return dates.contains(ts);
     }
     
 }

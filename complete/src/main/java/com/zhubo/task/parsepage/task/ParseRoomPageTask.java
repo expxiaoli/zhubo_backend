@@ -85,8 +85,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                 } else {
                     metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
                 }
-            } else if (itemElement.getChild("vipnickname") != null) {
-                String audienceName = itemElement.getChildText("vipnickname");
+            } else if (itemElement.getChild("top_name") != null && platformId != 2) {
+                String audienceName = itemElement.getChildText("top_name");
                 Long audienceAliasId = StringUtils.isNullOrEmpty(itemElement
                         .getChildText("vipuserid")) ? null : Long.valueOf(itemElement
                         .getChildText("vipuserid"));
@@ -118,7 +118,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         }
 
         if (income > 0) {
-            storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), income, pageDate);
+            storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), platformId, income, pageDate);
         }
         resourceManager.commit();
     }
@@ -146,6 +146,9 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             AudiencePayByMinutes payByMinutes = new AudiencePayByMinutes(audienceId, anchorId,
                     platformId, money, ts);
             rm.getDatabaseSession().save(payByMinutes);
+        } else {
+            System.out.println(String.format("exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore"
+                    , platformId, anchorId, audienceId));
         }
     }
 
@@ -155,15 +158,21 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
                     money, ts, periodStart);
             rm.getDatabaseSession().save(payPeriod);
+        }else {
+            System.out.println(String.format("exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore"
+                    , platformId, anchorId, audienceId));
         }
     }
 
-    private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int income,
+    private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int platformId, int income,
             Date pageDate) {
         if (!rm.getDatabaseCache().existInAnchorIncomeByMinutes(anchorId, pageDate)) {
             AnchorIncomeByMinutes incomeByMinutes = new AnchorIncomeByMinutes(anchorId, platformId,
                     income, pageDate);
             rm.getDatabaseSession().save(incomeByMinutes);
+        } else {
+            System.out.println(String.format("exist in minute pay for platform_id %d, anchor_id %d, ignore"
+                    , platformId, anchorId));
         }
     }
 

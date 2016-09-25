@@ -59,15 +59,15 @@ public class ParseAllPageTask {
         System.out.println("max middle name for files: " + maxMiddleName);
         
         
-        rm.initDatabaseCacheAndBatchLoad(
+        rm.initDatabaseCache(
                 GeneralHelper.parseDateFromFileMiddleName(minMiddleName), 
                 GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));        
         
         for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
-            rm.loadBatchInCache(platformId);
+            rm.loadBatchParsePageCache(platformId);
             parseFiles(files, parsePlatformPageFactoryClasses.get(platformId), rm);
             parseFiles(files, parseRoomPageFactoryClasses.get(platformId), rm);
-            rm.clearCache();
+            rm.clearParsePageCache();
         }
         
         System.out.println("begin to store cache to database");
@@ -154,7 +154,7 @@ public class ParseAllPageTask {
         }
         
     }
-/*
+
     public static void main(String[] args) throws JDOMException, IOException, ParseException,
             InstantiationException, IllegalAccessException {
         long start = System.currentTimeMillis();
@@ -164,5 +164,5 @@ public class ParseAllPageTask {
         System.out.println("use seconds:" + durationSecs);
         
     }
-*/
+
 }

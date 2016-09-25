@@ -52,16 +52,24 @@ public class ResourceManager {
         initPlatform(this);
     }
     
-    public void initDatabaseCacheAndBatchLoad(Date minTs, Date maxTs) {
+    public void initDatabaseCache(Date minTs, Date maxTs) {
         dbCache = new DatabaseCache(this, minTs, maxTs);
     }
     
-    public void loadBatchInCache(int platformId) {
-        dbCache.batchLoad(platformId);
+    public void loadBatchParsePageCache(int platformId) {
+        dbCache.batchLoadParsePageData(platformId);
     }
     
-    public void clearCache() {
-        dbCache.clearDate();
+    public void loadBatchProcessDataCache(int platformId) {
+        dbCache.batchLoadProcessData(platformId);
+    }
+    
+    public void clearParsePageCache() {
+        dbCache.clearParsePageData();
+    }
+    
+    public void clearProcessDataCache() {
+        dbCache.clearProcessData();
     }
 
     private void initDatabase() {

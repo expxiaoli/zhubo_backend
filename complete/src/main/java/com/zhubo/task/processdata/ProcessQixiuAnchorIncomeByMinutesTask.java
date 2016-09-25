@@ -19,8 +19,8 @@ public class ProcessQixiuAnchorIncomeByMinutesTask extends BaseProcessDataTask {
     private Map<Long, Map<Date, Map<Long, PlatformMoney>>> metrics; //[anchor_id][date][audience_id]
     private static final int limit = 500;
 
-    public ProcessQixiuAnchorIncomeByMinutesTask(ResourceManager resourceManager) {
-        super(resourceManager);
+    public ProcessQixiuAnchorIncomeByMinutesTask(ResourceManager resourceManager, int platformId) {
+        super(resourceManager, platformId);
     }
     
     public static class PlatformMoney {
