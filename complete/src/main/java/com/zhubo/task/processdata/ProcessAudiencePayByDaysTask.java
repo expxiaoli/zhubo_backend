@@ -119,7 +119,7 @@ public class ProcessAudiencePayByDaysTask extends BaseProcessDataTask {
     }
     
     private void clearMetric() {
-        
+        metrics.clear();
     }
 
 }
