@@ -87,8 +87,10 @@ public class ProcessMetricByDaysTask extends BaseProcessDataTask {
             for (String type : anchorMetric.keySet()) {
                 Map<Date, Integer> typeMetric = anchorMetric.get(type);
                 for (Date date : typeMetric.keySet()) {
-                    AnchorMetricByDays byDays = new AnchorMetricByDays(anchorId, platformId, type, typeMetric.get(date), date);
-                    resourceManager.getDatabaseSession().save(byDays);
+                    if(!resourceManager.getDatabaseCache().existInAnchorMetricByDays(anchorId, type, date)) {
+                        AnchorMetricByDays byDays = new AnchorMetricByDays(anchorId, platformId, type, typeMetric.get(date), date);
+                        resourceManager.getDatabaseSession().save(byDays);
+                    }
                 }
             }
         }
