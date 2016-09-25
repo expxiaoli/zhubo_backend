@@ -39,11 +39,12 @@ public class ProcessAllDataTask {
             rm.clearProcessDataCache();
         }
     }
-
+/*
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         ProcessAllDataTask task = new ProcessAllDataTask();
         task.setDates(new Date(2016-1900, 8, 1), new Date(2016-1900, 8, 19));
         task.run();
         System.out.println("process all data done");
     }
+*/    
 }
