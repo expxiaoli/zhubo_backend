@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zhubo.entity.Anchor;
+import com.zhubo.entity.AnchorIncomeByDays;
 import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByDays;
 import com.zhubo.entity.AnchorMetricByMinutes;
@@ -36,6 +37,7 @@ public class DatabaseCache {
     
     private Map<Long, Map<String, Set<Date>>> metricByDaysDatesMapper;
     private Map<Long, Map<Long, Set<Date>>> audiencePayByDaysDatesMapper;
+    private Map<Long, Set<Date>> anchorIncomeByDaysDatesMapper;
     
     public static class PayPeriodObject {
         public int platformId;
@@ -81,6 +83,7 @@ public class DatabaseCache {
     public void batchLoadProcessData(int platformId) {
         batchLoadMetricByDays(platformId);
         batchLoadAudiencePayByDays(platformId);
+        batchLoadAnchorIncomeByDays(platformId);
     }
     
     public void clearParsePageData() {
@@ -96,6 +99,7 @@ public class DatabaseCache {
     public void clearProcessData() {
         clearMetricByDays();
         clearAudiencePayByDays();
+        clearAnchorIncomeByDays();
     }
     
     public void batchSave() {
@@ -526,6 +530,35 @@ public class DatabaseCache {
             return false;
         }
         Set<Date> dates = audiencePayMapper.get(anchorId);
+        return dates != null && dates.contains(ts);
+    }
+    
+    //anchorIncomeByDaysDatesMapper
+    private void batchLoadAnchorIncomeByDays(int platformId) {
+        anchorIncomeByDaysDatesMapper = Maps.newHashMap();
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AnchorIncomeByDays where platform_id = :platform_id and record_effective_time >= :min_ts and record_effective_time <= :max_ts");
+        query.setParameter("min_ts", minTs);
+        query.setParameter("max_ts", maxTs);
+        query.setParameter("platform_id", platformId);
+        List<AnchorIncomeByDays> records = query.list();
+        for(AnchorIncomeByDays record : records) {
+            Set<Date> dates = anchorIncomeByDaysDatesMapper.get(record.getAnchorId());
+            if(dates == null) {
+                anchorIncomeByDaysDatesMapper.put(record.getAnchorId(), Sets.newHashSet());
+                dates = anchorIncomeByDaysDatesMapper.get(record.getAnchorId());
+            }
+            dates.add(record.getRecordEffectiveTime());
+        }
+        System.out.println("batchLoadAnchorIncomeByDays done");
+    }
+    
+    private void clearAnchorIncomeByDays() {
+        anchorIncomeByDaysDatesMapper.clear();
+    }
+    
+    public boolean existInAnchorIncomeByDays(long anchorId, Date ts) {
+        Set<Date> dates = anchorIncomeByDaysDatesMapper.get(anchorId);
         return dates != null && dates.contains(ts);
     }
     

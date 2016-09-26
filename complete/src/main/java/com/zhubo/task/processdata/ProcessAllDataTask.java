@@ -9,8 +9,9 @@ import com.zhubo.global.ResourceManager;
 public class ProcessAllDataTask {
     private static List<Class> processDataFactoryClasses = Lists
             .newArrayList(
-                    ProcessAudiencePayByDaysFactory.class
+                    //ProcessAudiencePayByDaysFactory.class
                     //ProcessMetricByDaysFactory.class
+                    ProcessAnchorIncomeByDaysFactory.class
                     );
 
     private Date start;
@@ -42,7 +43,7 @@ public class ProcessAllDataTask {
 /*
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         ProcessAllDataTask task = new ProcessAllDataTask();
-        task.setDates(new Date(2016-1900, 8, 1), new Date(2016-1900, 8, 19));
+        task.setDates(new Date(2016-1900, 8, 1), new Date(2016-1900, 8, 20));
         task.run();
         System.out.println("process all data done");
     }

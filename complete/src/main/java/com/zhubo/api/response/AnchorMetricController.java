@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zhubo.api.response.AnchorIncomeDetailResponse.AudiencePayItem;
+import com.zhubo.entity.AnchorIncomeByDays;
 import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByDays;
 import com.zhubo.entity.AnchorMetricByMinutes;
@@ -98,6 +99,28 @@ public class AnchorMetricController {
         ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AnchorIncomeResponse(anchorId, items);
     }
+    
+    @RequestMapping("/anchor_income_day")
+    public AnchorIncomeResponse getIncomeDay(@RequestParam(value = "anchor_id") Long anchorId,
+            @RequestParam(value = "start") String start, @RequestParam(value = "end") String end)
+            throws ParseException {
+        Date startDate = sdf.parse(start);
+        Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
+        Query query = session
+                .createQuery("from AnchorIncomeByDays where anchor_id = :anchor_id "
+                        + "and record_effective_time >= :start_date and record_effective_time < :end_date");
+        query.setParameter("anchor_id", anchorId);
+        query.setParameter("start_date", startDate);
+        query.setParameter("end_date", endDate);
+        List<AnchorIncomeByDays> metrics = query.list();
+        List<MetricItem> items = Lists.newArrayList();
+        for (AnchorIncomeByDays metric : metrics) {
+            items.add(new MetricItem(metric.getMoney(), metric.getRecordEffectiveTime()));
+        }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
+        return new AnchorIncomeResponse(anchorId, items);
+    }
 
     @RequestMapping("/anchor_income_detail_minute")
     public AnchorIncomeDetailResponse getIncomeDetailMinute(
@@ -162,7 +185,8 @@ public class AnchorMetricController {
             audienceQuery.setParameter("audience_id", audienceId);
             List<Audience> audiences = audienceQuery.list();
             String audienceName = audiences.get(0).getAudienceName();
-            payItems.add(new AudiencePayItem(audienceId, audienceName, totalPay, lastPayTime, rate,
+            Long audienceAliasId = audiences.get(0).getAudienceAliasId();
+            payItems.add(new AudiencePayItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
                     payHistory));
 
             count++;

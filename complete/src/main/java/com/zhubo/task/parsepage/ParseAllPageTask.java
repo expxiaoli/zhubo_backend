@@ -64,10 +64,10 @@ public class ParseAllPageTask {
                 GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));        
         
         for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
-            rm.loadBatchParsePageCache(platformId);
+       //     rm.loadBatchParsePageCache(platformId);
             parseFiles(files, parsePlatformPageFactoryClasses.get(platformId), rm);
             parseFiles(files, parseRoomPageFactoryClasses.get(platformId), rm);
-            rm.clearParsePageCache();
+       //     rm.clearParsePageCache();
         }
         
         System.out.println("begin to store cache to database");
