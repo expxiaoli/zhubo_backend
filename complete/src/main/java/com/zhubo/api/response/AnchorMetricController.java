@@ -23,6 +23,7 @@ import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByDays;
 import com.zhubo.entity.AnchorMetricByMinutes;
 import com.zhubo.entity.Audience;
+import com.zhubo.entity.AudiencePayByDays;
 import com.zhubo.entity.AudiencePayByMinutes;
 import com.zhubo.global.ResourceManager;
 
@@ -140,6 +141,79 @@ public class AnchorMetricController {
         Map<Long, List<MetricItem>> payItemsByAudience = Maps.newHashMap();
         int totalPayForAllAudience = 0;
         for (AudiencePayByMinutes record : records) {
+            Long audienceId = record.getAudienceId();
+            Integer money = record.getMoney();
+            Integer oldMoney = totalPaysByAudience.get(audienceId);
+            if (oldMoney == null) {
+                oldMoney = 0;
+            }
+            Integer newMoney = oldMoney + money;
+            totalPaysByAudience.put(audienceId, newMoney);
+            totalPayForAllAudience += money;
+
+            Date ts = record.getRecordEffectiveTime();
+            Date oldTs = lastPayTimeByAudience.get(audienceId);
+            if (oldTs == null || ts.compareTo(oldTs) > 0) {
+                lastPayTimeByAudience.put(audienceId, ts);
+            }
+
+            List<MetricItem> oldPayItems = payItemsByAudience.get(audienceId);
+            if (oldPayItems == null) {
+                payItemsByAudience.put(audienceId, Lists.newArrayList());
+            }
+            payItemsByAudience.get(audienceId).add(
+                    new MetricItem(record.getMoney(), record.getRecordEffectiveTime()));
+        }
+
+        List totalPays = new ArrayList();
+        for (Long audienceId : totalPaysByAudience.keySet()) {
+            totalPays.add(new AudienceTotalPay(audienceId, totalPaysByAudience.get(audienceId)));
+        }
+        AudienceTotalPayComparator comparator = new AudienceTotalPayComparator();
+        Collections.sort(totalPays, comparator);
+
+        int count = 0;
+        List<AudiencePayItem> payItems = Lists.newArrayList();
+        while (count < maxTopAudience && count < totalPays.size()) {
+            long audienceId = ((AudienceTotalPay) totalPays.get(count)).audienceId;
+            int totalPay = totalPaysByAudience.get(audienceId);
+            Date lastPayTime = lastPayTimeByAudience.get(audienceId);
+            List<MetricItem> payHistory = payItemsByAudience.get(audienceId);
+            double rate = (totalPay * 1.0) / totalPayForAllAudience;
+
+            Query audienceQuery = session
+                    .createQuery("from Audience where audience_id = :audience_id");
+            audienceQuery.setParameter("audience_id", audienceId);
+            List<Audience> audiences = audienceQuery.list();
+            String audienceName = audiences.get(0).getAudienceName();
+            Long audienceAliasId = audiences.get(0).getAudienceAliasId();
+            payItems.add(new AudiencePayItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
+                    payHistory));
+
+            count++;
+        }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
+        return new AnchorIncomeDetailResponse(payItems);
+    }
+    
+    @RequestMapping("/anchor_income_detail_day")
+    public AnchorIncomeDetailResponse getIncomeDetailDay(
+            @RequestParam(value = "anchor_id") Long anchorId,
+            @RequestParam(value = "start") String start, @RequestParam(value = "end") String end) throws ParseException {
+        Date startDate = sdf.parse(start);
+        Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
+        Query query = session.createQuery("from AudiencePayByDays where anchor_id = :anchor_id "
+                + "and record_effective_time >= :start_date and record_effective_time < :end_date");
+        query.setParameter("anchor_id", anchorId);
+        query.setParameter("start_date", startDate);
+        query.setParameter("end_date", endDate);
+        List<AudiencePayByDays> records = query.list();
+        Map<Long, Integer> totalPaysByAudience = Maps.newHashMap();
+        Map<Long, Date> lastPayTimeByAudience = Maps.newHashMap();
+        Map<Long, List<MetricItem>> payItemsByAudience = Maps.newHashMap();
+        int totalPayForAllAudience = 0;
+        for (AudiencePayByDays record : records) {
             Long audienceId = record.getAudienceId();
             Integer money = record.getMoney();
             Integer oldMoney = totalPaysByAudience.get(audienceId);
