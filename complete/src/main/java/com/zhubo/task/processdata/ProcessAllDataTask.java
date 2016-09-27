@@ -8,10 +8,10 @@ import com.zhubo.global.ResourceManager;
 
 public class ProcessAllDataTask {
     private static List<Class> processDataFactoryClasses = Lists
-            .newArrayList(
-                    //ProcessAudiencePayByDaysFactory.class
-                    //ProcessMetricByDaysFactory.class
-                    ProcessAnchorIncomeByDaysFactory.class
+            .newArrayList( 
+                    //ProcessAudiencePayByDaysFactory.class //0918 done
+                    //ProcessMetricByDaysFactory.class   //0918 done
+                    ProcessAnchorIncomeByDaysFactory.class //0919 done
                     );
 
     private Date start;

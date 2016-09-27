@@ -47,14 +47,25 @@ public class ParseAllPageTask {
     
 
     @SuppressWarnings("unchecked")
-    public void run(String folderPath) throws InstantiationException, IllegalAccessException, IOException, ParseException {
-        File folder = new File(folderPath);
+    public void run() throws InstantiationException, IllegalAccessException, IOException, ParseException {
+        String[] unionFolderPaths = {"/backup/catch/20160923", 
+                "/backup/catch/20160924",
+                "/backup/catch/20160925",
+                "/backup/catch/20160926"};
         ResourceManager rm = ResourceManager.generateResourceManager();
-        List<File> files = getValidFiles(folder.listFiles());
-        Collections.sort(files, new byPageTimeComparator());
+        List<File> allFiles = Lists.newArrayList();
         
-        String minMiddleName = getMinMiddleName(files);
-        String maxMiddleName = getMaxMiddleName(files);
+        for(String folderPath : unionFolderPaths) {
+            File folder = new File(folderPath);
+            List<File> files = getValidFiles(folder.listFiles());
+            for(File file : files) {
+                allFiles.add(file);
+            }
+        }
+        Collections.sort(allFiles, new byPageTimeComparator());
+        
+        String minMiddleName = getMinMiddleName(allFiles);
+        String maxMiddleName = getMaxMiddleName(allFiles);
         System.out.println("min middle name for files: " + minMiddleName);
         System.out.println("max middle name for files: " + maxMiddleName);
         
@@ -65,8 +76,8 @@ public class ParseAllPageTask {
         
         for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchParsePageCache(platformId);
-            parseFiles(files, parsePlatformPageFactoryClasses.get(platformId), rm);
-            parseFiles(files, parseRoomPageFactoryClasses.get(platformId), rm);
+            parseFiles(allFiles, parsePlatformPageFactoryClasses.get(platformId), rm);
+            parseFiles(allFiles, parseRoomPageFactoryClasses.get(platformId), rm);
             rm.clearParsePageCache();
         }
         
@@ -75,7 +86,7 @@ public class ParseAllPageTask {
         System.out.println("ParseAllPageTask done");
         System.out.println(String.format(
                 "parse page success %d, in parse range %d. total page count %d", parseSuccessCount,
-                toParseCount, files.size()));
+                toParseCount, allFiles.size()));
         System.out.println("error page:");
         for (String errorFilePath : errorFilePaths) {
             System.out.println(errorFilePath);
@@ -158,7 +169,7 @@ public class ParseAllPageTask {
     public static void main(String[] args) throws JDOMException, IOException, ParseException,
             InstantiationException, IllegalAccessException {
         long start = System.currentTimeMillis();
-        new ParseAllPageTask().run(args[0]);
+        new ParseAllPageTask().run();
         long end = System.currentTimeMillis();
         long durationSecs = (end - start) / 1000;
         System.out.println("use seconds:" + durationSecs);
