@@ -10,6 +10,8 @@ import com.zhubo.task.processdata.TimeUnit;
 public class GeneralHelper {
     
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss"); 
+    private static final SimpleDateFormat sdfFormat1 = new SimpleDateFormat("yyyy-M-d HH:mm:ss");
+    private static final SimpleDateFormat sdfFormat2 = new SimpleDateFormat("yyyy/M/d HH:mm:ss");//2016/9/27 12:50:40
 
     public static Date getAggregateDate(Date date, TimeUnit unit) {
         switch (unit) {
@@ -31,5 +33,13 @@ public class GeneralHelper {
     
     public static Date parseDateFromFileMiddleName(String fileMiddleName) throws ParseException {
         return sdf.parse(fileMiddleName);
+    }
+    
+    public static Date parseWithMultipleFormats(String str) throws ParseException {
+        if(str.contains("-")) {
+            return sdfFormat1.parse(str);
+        } else {
+            return sdfFormat2.parse(str);
+        }
     }
 }

@@ -31,7 +31,6 @@ import com.zhubo.helper.ModelHelper;
 import com.zhubo.task.processdata.TimeUnit;
 
 public class ParseRoomPageTask extends BaseParsePageTask {
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private Integer income;
 
     public ParseRoomPageTask(String filePath, ResourceManager resourceManager, int platformId) {
@@ -57,10 +56,9 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         try {
             String pagePlatform = dataElement.getChild("platform").getValue();
             String dataStr = dataElement.getChild("date").getValue();
-            Date pageDate = sdf.parse(dataStr);
+            Date pageDate = GeneralHelper.parseWithMultipleFormats(dataStr);
             Element allContItemElement = dataElement.getChild("cont_items");
             parseAndStoreMetric(allContItemElement, pageDate);
-            long runEnd = System.currentTimeMillis();
             return true;
         } catch (ParseException e) {
             throw new PageFormatException("platform, time or type element is not existed");
@@ -85,7 +83,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                 } else {
                     metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
                 }
-            } else if (itemElement.getChild("top_name") != null && platformId != 2) {
+            } else if (itemElement.getChild("top_name") != null) {
                 String audienceName = itemElement.getChildText("top_name");
                 Long audienceAliasId = StringUtils.isNullOrEmpty(itemElement
                         .getChildText("vipuserid")) ? null : Long.valueOf(itemElement
