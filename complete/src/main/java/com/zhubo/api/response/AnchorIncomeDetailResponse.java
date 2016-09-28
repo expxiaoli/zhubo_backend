@@ -5,8 +5,8 @@ import java.util.List;
 
 
 public class AnchorIncomeDetailResponse {
-    private final List<AudiencePayItem> audiencePays;
-    public static class AudiencePayItem {
+    private final List<AnchorIncomeItem> audiencePays;
+    public static class AnchorIncomeItem {
         private final long audienceId;
         private final Long audienceAliasId;
         private final String audienceName;
@@ -15,7 +15,7 @@ public class AnchorIncomeDetailResponse {
         private final double rateInCurAudience;
         private final List<MetricItem> payHistory;
        
-        public AudiencePayItem (long audienceId, Long audienceAliasId, String audienceName, int totalPay, Date lastPayTime, double rateInCurAudience, List<MetricItem> payHistory) {
+        public AnchorIncomeItem (long audienceId, Long audienceAliasId, String audienceName, int totalPay, Date lastPayTime, double rateInCurAudience, List<MetricItem> payHistory) {
             this.audienceId = audienceId;
             this.audienceAliasId = audienceAliasId;
             this.audienceName = audienceName;
@@ -54,11 +54,11 @@ public class AnchorIncomeDetailResponse {
         }
     }
     
-    public List<AudiencePayItem> getAudiencePays() {
+    public List<AnchorIncomeItem> getAudiencePays() {
         return audiencePays;
     }
     
-    public AnchorIncomeDetailResponse(List<AudiencePayItem> audiencePays) {
+    public AnchorIncomeDetailResponse(List<AnchorIncomeItem> audiencePays) {
         this.audiencePays = audiencePays;
     }
 }

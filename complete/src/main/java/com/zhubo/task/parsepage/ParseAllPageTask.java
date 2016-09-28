@@ -28,72 +28,60 @@ public class ParseAllPageTask {
     private Map<Integer, Class> parseRoomPageFactoryClasses;
     private Map<Class, List<File>> classToFilesMapping;
     private int maxPlatformId = 2;
-    
 
     public ParseAllPageTask() {
         parsePlatformPageFactoryClasses = Maps.newHashMap();
         parsePlatformPageFactoryClasses.put(1, ParseQixiuPlatformPageFactory.class);
         parsePlatformPageFactoryClasses.put(2, ParseLaifengPlatformPageFactory.class);
-        
+
         parseRoomPageFactoryClasses = Maps.newHashMap();
         parseRoomPageFactoryClasses.put(1, ParseQixiuRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
     }
-    
+
     private int parseSuccessCount = 0;
     private int toParseCount = 0;
     private List<String> errorFilePaths = Lists.newArrayList();
-    
-    
 
     @SuppressWarnings("unchecked")
-    public void run() throws InstantiationException, IllegalAccessException, IOException, ParseException {
-        String[] unionFolderPaths = {"/backup/catch/20160923", 
-                "/backup/catch/20160924",
-                "/backup/catch/20160925",
-                "/backup/catch/20160926"};
+    public void run(String folderPath) throws InstantiationException, IllegalAccessException,
+            IOException, ParseException {
+
         ResourceManager rm = ResourceManager.generateResourceManager();
-        List<File> allFiles = Lists.newArrayList();
-        
-        for(String folderPath : unionFolderPaths) {
-            File folder = new File(folderPath);
-            List<File> files = getValidFiles(folder.listFiles());
-            for(File file : files) {
-                allFiles.add(file);
-            }
-        }
-        Collections.sort(allFiles, new byPageTimeComparator());
-        
-        String minMiddleName = getMinMiddleName(allFiles);
-        String maxMiddleName = getMaxMiddleName(allFiles);
+
+        File folder = new File(folderPath);
+        List<File> files = getValidFiles(folder.listFiles());
+        Collections.sort(files, new byPageTimeComparator());
+
+        String minMiddleName = getMinMiddleName(files);
+        String maxMiddleName = getMaxMiddleName(files);
         System.out.println("min middle name for files: " + minMiddleName);
         System.out.println("max middle name for files: " + maxMiddleName);
-        
-        
-        rm.initDatabaseCache(
-                GeneralHelper.parseDateFromFileMiddleName(minMiddleName), 
-                GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));        
-        
-        for(int platformId = 1; platformId <= maxPlatformId; platformId++) {
+
+        rm.initDatabaseCache(GeneralHelper.parseDateFromFileMiddleName(minMiddleName),
+                GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));
+
+        for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchParsePageCache(platformId);
-            parseFiles(allFiles, parsePlatformPageFactoryClasses.get(platformId), rm);
-            parseFiles(allFiles, parseRoomPageFactoryClasses.get(platformId), rm);
+            parseFiles(files, parsePlatformPageFactoryClasses.get(platformId), rm);
+            parseFiles(files, parseRoomPageFactoryClasses.get(platformId), rm);
             rm.clearParsePageCache();
         }
-        
+
         System.out.println("begin to store cache to database");
         rm.getDatabaseCache().batchSave();
         System.out.println("ParseAllPageTask done");
         System.out.println(String.format(
                 "parse page success %d, in parse range %d. total page count %d", parseSuccessCount,
-                toParseCount, allFiles.size()));
+                toParseCount, files.size()));
         System.out.println("error page:");
         for (String errorFilePath : errorFilePaths) {
             System.out.println(errorFilePath);
         }
     }
-    
-    private void parseFiles(List<File> files, Class factoryClass, ResourceManager rm) throws IOException, InstantiationException, IllegalAccessException {
+
+    private void parseFiles(List<File> files, Class factoryClass, ResourceManager rm)
+            throws IOException, InstantiationException, IllegalAccessException {
         BaseParsePageFactory factory;
         BaseParsePageTask task;
         factory = (BaseParsePageFactory) factoryClass.newInstance();
@@ -122,58 +110,55 @@ public class ParseAllPageTask {
             }
         }
     }
-    
+
     private List<File> getValidFiles(File[] files) {
         List<File> validFiles = Lists.newArrayList();
-        for(File file : files) {
+        for (File file : files) {
             String[] parts = file.getName().split("-");
-            if(parts.length == 4 && parts[2].length() == 14) {
+            if (parts.length == 4 && parts[2].length() == 14) {
                 validFiles.add(file);
             }
         }
         return validFiles;
     }
-    
+
     private String getMinMiddleName(List<File> files) {
         return files.get(0).getName().split("-")[2];
     }
-    
+
     private String getMaxMiddleName(List<File> files) {
         return files.get(files.size() - 1).getName().split("-")[2];
     }
-   
-    
+
     public class byPageTimeComparator implements Comparator {
 
         @Override
         public int compare(Object o1, Object o2) {
-            File f1 = (File)o1;
-            File f2 = (File)o2;
+            File f1 = (File) o1;
+            File f2 = (File) o2;
             String[] parts1 = f1.getName().split("-");
             long pageTs1 = Long.valueOf(parts1[2]);
             long importTs1 = Long.valueOf(parts1[3]);
             String[] parts2 = f2.getName().split("-");
             long pageTs2 = Long.valueOf(parts2[2]);
-            long importTs2 = Long.valueOf(parts2[3]);            
+            long importTs2 = Long.valueOf(parts2[3]);
             if (pageTs1 < pageTs2 || (pageTs1 == pageTs2 && importTs1 < importTs2)) {
                 return -1;
-            } else if(pageTs1 == pageTs2 && importTs1 == importTs2) {
+            } else if (pageTs1 == pageTs2 && importTs1 == importTs2) {
                 return 0;
             } else {
                 return 1;
             }
         }
-        
-    }
 
-    public static void main(String[] args) throws JDOMException, IOException, ParseException,
-            InstantiationException, IllegalAccessException {
-        long start = System.currentTimeMillis();
-        new ParseAllPageTask().run();
-        long end = System.currentTimeMillis();
-        long durationSecs = (end - start) / 1000;
-        System.out.println("use seconds:" + durationSecs);
-        
     }
-
+    /*
+     * public static void main(String[] args) throws JDOMException, IOException,
+     * ParseException, InstantiationException, IllegalAccessException { long
+     * start = System.currentTimeMillis(); new ParseAllPageTask().run(); long
+     * end = System.currentTimeMillis(); long durationSecs = (end - start) /
+     * 1000; System.out.println("use seconds:" + durationSecs);
+     * 
+     * }
+     */
 }

@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.zhubo.api.response.AnchorIncomeDetailResponse.AudiencePayItem;
+import com.zhubo.api.response.AnchorIncomeDetailResponse.AnchorIncomeItem;
+import com.zhubo.api.response.AudiencePayDetailResponse.AudiencePayItem;
+import com.zhubo.entity.Anchor;
 import com.zhubo.entity.AnchorIncomeByDays;
 import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByDays;
@@ -167,15 +169,15 @@ public class AnchorMetricController {
 
         List totalPays = new ArrayList();
         for (Long audienceId : totalPaysByAudience.keySet()) {
-            totalPays.add(new AudienceTotalPay(audienceId, totalPaysByAudience.get(audienceId)));
+            totalPays.add(new AudiencePay(audienceId, totalPaysByAudience.get(audienceId)));
         }
-        AudienceTotalPayComparator comparator = new AudienceTotalPayComparator();
+        AudiencePayComparator comparator = new AudiencePayComparator();
         Collections.sort(totalPays, comparator);
 
         int count = 0;
-        List<AudiencePayItem> payItems = Lists.newArrayList();
+        List<AnchorIncomeItem> payItems = Lists.newArrayList();
         while (count < maxTopAudience && count < totalPays.size()) {
-            long audienceId = ((AudienceTotalPay) totalPays.get(count)).audienceId;
+            long audienceId = ((AudiencePay) totalPays.get(count)).audienceId;
             int totalPay = totalPaysByAudience.get(audienceId);
             Date lastPayTime = lastPayTimeByAudience.get(audienceId);
             List<MetricItem> payHistory = payItemsByAudience.get(audienceId);
@@ -187,7 +189,7 @@ public class AnchorMetricController {
             List<Audience> audiences = audienceQuery.list();
             String audienceName = audiences.get(0).getAudienceName();
             Long audienceAliasId = audiences.get(0).getAudienceAliasId();
-            payItems.add(new AudiencePayItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
+            payItems.add(new AnchorIncomeItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
                     payHistory));
 
             count++;
@@ -240,15 +242,15 @@ public class AnchorMetricController {
 
         List totalPays = new ArrayList();
         for (Long audienceId : totalPaysByAudience.keySet()) {
-            totalPays.add(new AudienceTotalPay(audienceId, totalPaysByAudience.get(audienceId)));
+            totalPays.add(new AudiencePay(audienceId, totalPaysByAudience.get(audienceId)));
         }
-        AudienceTotalPayComparator comparator = new AudienceTotalPayComparator();
+        AudiencePayComparator comparator = new AudiencePayComparator();
         Collections.sort(totalPays, comparator);
 
         int count = 0;
-        List<AudiencePayItem> payItems = Lists.newArrayList();
+        List<AnchorIncomeItem> payItems = Lists.newArrayList();
         while (count < maxTopAudience && count < totalPays.size()) {
-            long audienceId = ((AudienceTotalPay) totalPays.get(count)).audienceId;
+            long audienceId = ((AudiencePay) totalPays.get(count)).audienceId;
             int totalPay = totalPaysByAudience.get(audienceId);
             Date lastPayTime = lastPayTimeByAudience.get(audienceId);
             List<MetricItem> payHistory = payItemsByAudience.get(audienceId);
@@ -260,7 +262,7 @@ public class AnchorMetricController {
             List<Audience> audiences = audienceQuery.list();
             String audienceName = audiences.get(0).getAudienceName();
             Long audienceAliasId = audiences.get(0).getAudienceAliasId();
-            payItems.add(new AudiencePayItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
+            payItems.add(new AnchorIncomeItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
                     payHistory));
 
             count++;
@@ -268,23 +270,163 @@ public class AnchorMetricController {
         ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AnchorIncomeDetailResponse(payItems);
     }
+    
+    @RequestMapping("/audience_pay_detail_minute")
+    public AudiencePayDetailResponse getAudiencePayDetailMinute(
+            @RequestParam(value = "audience_id") Long audienceId,
+            @RequestParam(value = "start") String start, @RequestParam(value = "end") String end) throws ParseException {
+        Date startDate = sdf.parse(start);
+        Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
+        Query query = session.createQuery("from AudiencePayByMinutes where audience_id = :audience_id "
+                + "and record_effective_time >= :start_date and record_effective_time < :end_date order by record_effective_time asc");
+        query.setParameter("audience_id", audienceId);
+        query.setParameter("start_date", startDate);
+        query.setParameter("end_date", endDate);
+        List<AudiencePayByMinutes> records = query.list();
+        Map<Long, Integer> totalIncomeByAnchor = Maps.newHashMap();
+        int totalMoney = 0;
+        Map<Long, List<MetricItem>> incomeItemsByAnchor = Maps.newHashMap();
+        for(AudiencePayByMinutes record : records) {
+            long anchorId = record.getAnchorId();
+            int money = record.getMoney();
+            Date ts = record.getRecordEffectiveTime();
+            Integer oldMoney = totalIncomeByAnchor.get(anchorId);
+            if(oldMoney == null) {
+                oldMoney = 0;
+                incomeItemsByAnchor.put(anchorId, Lists.newArrayList());
+            }
+            int newMoney = oldMoney + money;
+            totalMoney += money;
+            totalIncomeByAnchor.put(anchorId, newMoney);
+            incomeItemsByAnchor.get(anchorId).add(new MetricItem(money, ts));
+        }
+        List totalIncomes = new ArrayList();
+        for(Long anchorId : totalIncomeByAnchor.keySet()) {
+            totalIncomes.add(new AnchorIncome(anchorId, totalIncomeByAnchor.get(anchorId)));
+        }
+        AnchorIncomeComparator comparator = new AnchorIncomeComparator();
+        Collections.sort(totalIncomes, comparator);
+        int count = 0;
+        List<AudiencePayItem> payItems = Lists.newArrayList();
+        
+        while(count < maxTopAudience && count < totalIncomes.size()) {
+            AnchorIncome anchorIncome = (AnchorIncome) totalIncomes.get(count);
+            long anchorId = anchorIncome.anchorId;
+            int income = anchorIncome.money;
 
-    public static class AudienceTotalPay {
+            Query anchorQuery = session
+                    .createQuery("from Anchor where anchor_id = :anchor_id");
+            anchorQuery.setParameter("anchor_id", anchorId);
+            List<Anchor> anchors = anchorQuery.list();
+            Long anchorAliasId = anchors.get(0).getAnchorAliasId();
+            String anchorName = anchors.get(0).getAnchorName();
+            double rateInCurAudience = income * 1.0 / totalMoney;
+            List<MetricItem> incomeHistory = incomeItemsByAnchor.get(anchorId);
+            
+            payItems.add(new AudiencePayItem(anchorId, anchorAliasId, anchorName, income,
+                    rateInCurAudience, incomeHistory));
+            count++;
+        }         
+        return new AudiencePayDetailResponse(payItems);
+    }
+    
+    @RequestMapping("/audience_pay_detail_day")
+    public AudiencePayDetailResponse getAudiencePayDetailDay(
+            @RequestParam(value = "audience_id") Long audienceId,
+            @RequestParam(value = "start") String start, @RequestParam(value = "end") String end) throws ParseException {
+        Date startDate = sdf.parse(start);
+        Date endDate = sdf.parse(end);
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
+        Query query = session.createQuery("from AudiencePayByDays where audience_id = :audience_id "
+                + "and record_effective_time >= :start_date and record_effective_time < :end_date order by record_effective_time asc");
+        query.setParameter("audience_id", audienceId);
+        query.setParameter("start_date", startDate);
+        query.setParameter("end_date", endDate);
+        List<AudiencePayByDays> records = query.list();
+        Map<Long, Integer> totalIncomeByAnchor = Maps.newHashMap();
+        int totalMoney = 0;
+        Map<Long, List<MetricItem>> incomeItemsByAnchor = Maps.newHashMap();
+        for(AudiencePayByDays record : records) {
+            long anchorId = record.getAnchorId();
+            int money = record.getMoney();
+            Date ts = record.getRecordEffectiveTime();
+            Integer oldMoney = totalIncomeByAnchor.get(anchorId);
+            if(oldMoney == null) {
+                oldMoney = 0;
+                incomeItemsByAnchor.put(anchorId, Lists.newArrayList());
+            }
+            int newMoney = oldMoney + money;
+            totalMoney += money;
+            totalIncomeByAnchor.put(anchorId, newMoney);
+            incomeItemsByAnchor.get(anchorId).add(new MetricItem(money, ts));
+        }
+        List totalIncomes = new ArrayList();
+        for(Long anchorId : totalIncomeByAnchor.keySet()) {
+            totalIncomes.add(new AnchorIncome(anchorId, totalIncomeByAnchor.get(anchorId)));
+        }
+        AnchorIncomeComparator comparator = new AnchorIncomeComparator();
+        Collections.sort(totalIncomes, comparator);
+        int count = 0;
+        List<AudiencePayItem> payItems = Lists.newArrayList();
+        
+        while(count < maxTopAudience && count < totalIncomes.size()) {
+            AnchorIncome anchorIncome = (AnchorIncome) totalIncomes.get(count);
+            long anchorId = anchorIncome.anchorId;
+            int income = anchorIncome.money;
+
+            Query anchorQuery = session
+                    .createQuery("from Anchor where anchor_id = :anchor_id");
+            anchorQuery.setParameter("anchor_id", anchorId);
+            List<Anchor> anchors = anchorQuery.list();
+            Long anchorAliasId = anchors.get(0).getAnchorAliasId();
+            String anchorName = anchors.get(0).getAnchorName();
+            double rateInCurAudience = income * 1.0 / totalMoney;
+            List<MetricItem> incomeHistory = incomeItemsByAnchor.get(anchorId);
+            
+            payItems.add(new AudiencePayItem(anchorId, anchorAliasId, anchorName, income,
+                    rateInCurAudience, incomeHistory));
+            count++;
+        }         
+        return new AudiencePayDetailResponse(payItems);
+    }
+
+    public static class AudiencePay {
         public long audienceId;
         public int money;
 
-        public AudienceTotalPay(long audienceId, int pay) {
+        public AudiencePay(long audienceId, int pay) {
             this.audienceId = audienceId;
             this.money = pay;
         }
     }
-
-    public class AudienceTotalPayComparator implements Comparator {
+    
+    public class AudiencePayComparator implements Comparator {
         public final int compare(Object o1, Object o2) {
-            AudienceTotalPay p1 = (AudienceTotalPay) o1;
-            AudienceTotalPay p2 = (AudienceTotalPay) o2;
+            AudiencePay p1 = (AudiencePay) o1;
+            AudiencePay p2 = (AudiencePay) o2;
             return p2.money - p1.money;
         }
     }
+    
+    public static class AnchorIncome {
+        public long anchorId;
+        public int money;
+        
+        public AnchorIncome(long anchorId, int money) {
+            this.anchorId = anchorId;
+            this.money = money;
+        }
+    }
+    
+    public class AnchorIncomeComparator implements Comparator {
+        public final int compare(Object o1, Object o2) {
+            AnchorIncome i1 = (AnchorIncome)o1;
+            AnchorIncome i2 = (AnchorIncome)o2;
+            return i2.money - i1.money;
+        }
+    }
+    
+
 
 }
