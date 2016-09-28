@@ -67,7 +67,7 @@ public class ProcessAudiencePayByDaysTask extends BaseProcessDataTask {
             }
         }
         System.out.println(String.format("process audience pay by days for platform %d done", platformId));
-        return false;
+        return true;
     }
     
     private void addMetric(long audienceId, long anchorId, Date date, int money) {
