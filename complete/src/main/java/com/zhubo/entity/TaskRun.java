@@ -40,10 +40,10 @@ public class TaskRun {
     @Column(name = "folder_path")
     private String folderPath;
     
-    @Column(name = "folder_path")
+    @Column(name = "process_start")
     private Date processStart;
     
-    @Column(name = "folder_path")
+    @Column(name = "process_end")
     private Date processEnd;
     
     public void setSuccessAndCompleted(boolean success, Date completed) {
