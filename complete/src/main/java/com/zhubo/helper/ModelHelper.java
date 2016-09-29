@@ -14,6 +14,7 @@ import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByMinutes;
 import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.entity.Platform;
+import com.zhubo.entity.TaskGroupRun;
 import com.zhubo.entity.TaskRun;
 import com.zhubo.global.DatabaseCache.PayPeriodObject;
 import com.zhubo.global.ResourceManager;
@@ -89,19 +90,34 @@ public class ModelHelper {
     public static TaskRun markParsePageTaskStart(ResourceManager rm, String className, Integer platformId, String folderPath) {
         TaskRun taskRun = new TaskRun(className, "ParsePage", platformId, folderPath, null, null, new Date());
         rm.getDatabaseSession().save(taskRun);
+        rm.commit();
         return taskRun;
     }
     
     public static TaskRun markProcessDataTaskStart(ResourceManager rm, String className, Integer platformId, Date processStart, Date processEnd) {
         TaskRun taskRun = new TaskRun(className, "ProcessData", platformId, null, processStart, processEnd, new Date());
         rm.getDatabaseSession().save(taskRun);
+        rm.commit();
         return taskRun;
-    }
-    
+    }    
     
     public static void markTaskSuccess(ResourceManager rm, TaskRun taskRun) {
         taskRun.setSuccessAndCompleted(true, new Date());
         rm.getDatabaseSession().update(taskRun);
+        rm.commit();
+    }
+    
+    public static TaskGroupRun markTaskGroupStart(ResourceManager rm, String dataTime) {
+        TaskGroupRun tgr = new TaskGroupRun(dataTime, new Date());
+        rm.getDatabaseSession().save(tgr);
+        rm.commit();
+        return tgr;
+    }
+    
+    public static void markTaskGroupSuccess(ResourceManager rm, TaskGroupRun tgr) {
+        tgr.setSuccessAndCompleted(true, new Date());
+        rm.getDatabaseSession().update(tgr);
+        rm.commit();
     }
        
 }

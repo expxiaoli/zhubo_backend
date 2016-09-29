@@ -28,5 +28,7 @@
     	<mapping class="com.zhubo.entity.AnchorIncomeByDays"/>
     	<mapping class="com.zhubo.entity.AudiencePayByDays"/>
     	<mapping class="com.zhubo.entity.AudienceTotalPayByDays"/>
+    	<mapping class="com.zhubo.entity.TaskRun"/>
+    	<mapping class="com.zhubo.entity.TaskGroupRun"/>
     </session-factory>
 </hibernate-configuration>
