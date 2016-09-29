@@ -19,4 +19,9 @@ public class ParseLaifengPlatformPageFactory extends BaseParsePageFactory {
     public String getFilePrefix() {
         return "平台-来疯广场";
     }
+
+    @Override
+    public String getTaskName() {
+        return "ParsePlatformPageTask";
+    }
 }

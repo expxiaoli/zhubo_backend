@@ -14,6 +14,7 @@ import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByMinutes;
 import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.entity.Platform;
+import com.zhubo.entity.TaskRun;
 import com.zhubo.global.DatabaseCache.PayPeriodObject;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.task.parsepage.task.ParseRoomPageTask.Pay;
@@ -83,6 +84,24 @@ public class ModelHelper {
         } else {
             return metrics.get(0);
         }
+    }
+    
+    public static TaskRun markParsePageTaskStart(ResourceManager rm, String className, Integer platformId, String folderPath) {
+        TaskRun taskRun = new TaskRun(className, "ParsePage", platformId, folderPath, null, null, new Date());
+        rm.getDatabaseSession().save(taskRun);
+        return taskRun;
+    }
+    
+    public static TaskRun markProcessDataTaskStart(ResourceManager rm, String className, Integer platformId, Date processStart, Date processEnd) {
+        TaskRun taskRun = new TaskRun(className, "ProcessData", platformId, null, processStart, processEnd, new Date());
+        rm.getDatabaseSession().save(taskRun);
+        return taskRun;
+    }
+    
+    
+    public static void markTaskSuccess(ResourceManager rm, TaskRun taskRun) {
+        taskRun.setSuccessAndCompleted(true, new Date());
+        rm.getDatabaseSession().update(taskRun);
     }
        
 }

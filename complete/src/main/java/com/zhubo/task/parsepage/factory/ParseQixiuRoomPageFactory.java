@@ -19,4 +19,9 @@ public class ParseQixiuRoomPageFactory extends BaseParsePageFactory {
     public String getFilePrefix() {
         return "奇秀-主播房间";
     }
+
+    @Override
+    public String getTaskName() {
+        return "ParseRoomPageTask";
+    }
 }

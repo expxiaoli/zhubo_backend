@@ -19,4 +19,9 @@ public class ParseLaifengRoomPageFactory extends BaseParsePageFactory {
     public String getFilePrefix() {
         return "来疯-主播房间";
     }
+
+    @Override
+    public String getTaskName() {
+        return "ParseRoomPageTask";
+    }
 }

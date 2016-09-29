@@ -4,7 +4,9 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.zhubo.entity.TaskRun;
 import com.zhubo.global.ResourceManager;
+import com.zhubo.helper.ModelHelper;
 
 public class ProcessAllDataTask {
     private static List<Class> processDataFactoryClasses = Lists
@@ -18,10 +20,15 @@ public class ProcessAllDataTask {
     private Date start;
     private Date end;
     private Integer maxPlatformId = 2;
+    private boolean updateTaskRun = false;
 
     public void setDates(Date start, Date end) {
         this.start = start;
         this.end = end;
+    }
+    
+    public void setUpdateTaskRun(boolean updateTaskRun) {
+        this.updateTaskRun = updateTaskRun;
     }
 
     public void run() throws InstantiationException, IllegalAccessException {
@@ -33,10 +40,17 @@ public class ProcessAllDataTask {
             for (Class factoryClass : processDataFactoryClasses) {
                 BaseProcessDataFactory factory = (BaseProcessDataFactory) factoryClass
                         .newInstance();
-                BaseProcessDataTask task = factory.create(rm, platformId);
+                BaseProcessDataTask task = factory.create(rm, platformId);                
                 task.setStartDate(start);
                 task.setEndDate(end);
+                TaskRun taskRun = null;
+                if(updateTaskRun) {
+                    taskRun = ModelHelper.markProcessDataTaskStart(rm, task.getClass().getSimpleName(), platformId, start, end);
+                }
                 task.run();
+                if(updateTaskRun) {
+                    ModelHelper.markTaskSuccess(rm, taskRun);
+                }
             }
             rm.clearProcessDataCache();
         }

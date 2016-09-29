@@ -12,9 +12,11 @@ import org.jdom.JDOMException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zhubo.entity.TaskRun;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
+import com.zhubo.helper.ModelHelper;
 import com.zhubo.task.parsepage.factory.BaseParsePageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengRoomPageFactory;
@@ -28,6 +30,7 @@ public class ParseAllPageTask {
     private Map<Integer, Class> parseRoomPageFactoryClasses;
     private Map<Class, List<File>> classToFilesMapping;
     private int maxPlatformId = 2;
+    private boolean updateTaskRun = false;
 
     public ParseAllPageTask() {
         parsePlatformPageFactoryClasses = Maps.newHashMap();
@@ -39,6 +42,10 @@ public class ParseAllPageTask {
         parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
     }
 
+    public void setUpdateTaskRun(boolean updateTaskRun) {
+        this.updateTaskRun = updateTaskRun;
+    }
+    
     private int parseSuccessCount = 0;
     private int toParseCount = 0;
     private List<String> errorFilePaths = Lists.newArrayList();
@@ -63,8 +70,8 @@ public class ParseAllPageTask {
 
         for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchParsePageCache(platformId);
-            parseFiles(files, parsePlatformPageFactoryClasses.get(platformId), rm);
-            parseFiles(files, parseRoomPageFactoryClasses.get(platformId), rm);
+            parseFiles(folderPath, files, platformId, parsePlatformPageFactoryClasses.get(platformId), rm);
+            parseFiles(folderPath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
             rm.clearParsePageCache();
         }
 
@@ -80,11 +87,15 @@ public class ParseAllPageTask {
         }
     }
 
-    private void parseFiles(List<File> files, Class factoryClass, ResourceManager rm)
+    private void parseFiles(String folderPath, List<File> files, Integer platformId, Class factoryClass, ResourceManager rm)
             throws IOException, InstantiationException, IllegalAccessException {
         BaseParsePageFactory factory;
         BaseParsePageTask task;
         factory = (BaseParsePageFactory) factoryClass.newInstance();
+        TaskRun taskRun = null;
+        if(updateTaskRun) {
+            taskRun = ModelHelper.markParsePageTaskStart(rm, factory.getTaskName(), platformId, folderPath);
+        }
         for (File file : files) {
             boolean result = false;
             String fileName = file.getName();
@@ -108,6 +119,9 @@ public class ParseAllPageTask {
                         "parse page success %d, in parse range %d. total page count %d",
                         parseSuccessCount, toParseCount, files.size()));
             }
+        }
+        if(updateTaskRun) {
+            ModelHelper.markTaskSuccess(rm, taskRun);
         }
     }
 

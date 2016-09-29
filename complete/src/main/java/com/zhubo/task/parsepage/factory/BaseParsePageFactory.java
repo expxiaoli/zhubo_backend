@@ -9,6 +9,8 @@ public abstract class BaseParsePageFactory {
     public abstract BaseParsePageTask create(String filePath, ResourceManager resourceManager);
 
     public abstract String getFilePrefix();
+    
+    public abstract String getTaskName();
 
     public static int getPlatformId() {
         return platformId;

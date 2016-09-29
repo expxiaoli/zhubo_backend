@@ -19,5 +19,10 @@ public class ParseQixiuPlatformPageFactory extends BaseParsePageFactory {
     public String getFilePrefix() {
         return "平台-奇秀广场";
     }
+
+    @Override
+    public String getTaskName() {
+        return "ParsePlatformPageTask";
+    }
     
 }
