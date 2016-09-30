@@ -16,7 +16,7 @@ import com.zhubo.global.DatabaseCache.AnchorObject;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.ModelHelper;
 
-public class ParsePlatformPageTask extends BaseParsePageTask{
+public class ParsePlatformPageTask extends BaseParsePageTask {
     public ParsePlatformPageTask(String filePath, ResourceManager resourceManager, int platformId) {
         super(filePath, resourceManager, platformId);
     }
@@ -42,6 +42,9 @@ public class ParsePlatformPageTask extends BaseParsePageTask{
                 String pageTime = dataElement.getChild("time").getValue();
                 String pageType = dataElement.getChild("type").getValue();
                 Element allContItemElement = dataElement.getChild("cont_items");
+                if (allContItemElement == null) {
+                    throw new PageFormatException("cont_items is not existed");
+                }
                 parseAndStoreAnchorContent(allContItemElement, pageType);
                 return true;
             } else {
@@ -59,16 +62,19 @@ public class ParsePlatformPageTask extends BaseParsePageTask{
             Long roomNumber = Long.valueOf(itemElement.getChildText("room_number"));
             String nickName = itemElement.getChildText("nickname");
             String area = itemElement.getChildText("area");
-            AnchorObject anchorInCache = resourceManager.getDatabaseCache().getAnchorObjectFromCache(roomNumber);
-            if(anchorInCache == null) {
+            AnchorObject anchorInCache = resourceManager.getDatabaseCache()
+                    .getAnchorObjectFromCache(roomNumber);
+            if (anchorInCache == null) {
                 Anchor anchor = new Anchor(platformId, roomNumber, nickName);
                 anchor.setArea(area);
                 anchor.setType(pageType);
                 resourceManager.getDatabaseSession().save(anchor);
-                resourceManager.getDatabaseCache().setAnchorObjectInCache(anchor.getAnchorAliasId(), new AnchorObject(
-                        anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
-            } else if(anchorInCache.area == null || anchorInCache.type == null) {
-                Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class, anchorInCache.anchorId);
+                resourceManager.getDatabaseCache().setAnchorObjectInCache(
+                        anchor.getAnchorAliasId(),
+                        new AnchorObject(anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
+            } else if (anchorInCache.area == null || anchorInCache.type == null) {
+                Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class,
+                        anchorInCache.anchorId);
                 anchor.setArea(area);
                 anchor.setType(pageType);
                 resourceManager.getDatabaseSession().update(anchor);
@@ -76,11 +82,10 @@ public class ParsePlatformPageTask extends BaseParsePageTask{
         }
         resourceManager.commit();
     }
-/*
-    public static void main(String[] args) throws JDOMException, IOException, PageFormatException {
-        ParseQixiuPlatformPageTask task = new ParseQixiuPlatformPageTask(
-                "sample_data/platform_page", ResourceManager.generateResourceManager());
-        task.run();
-    }
-*/
+    /*
+     * public static void main(String[] args) throws JDOMException, IOException,
+     * PageFormatException { ParseQixiuPlatformPageTask task = new
+     * ParseQixiuPlatformPageTask( "sample_data/platform_page",
+     * ResourceManager.generateResourceManager()); task.run(); }
+     */
 }
