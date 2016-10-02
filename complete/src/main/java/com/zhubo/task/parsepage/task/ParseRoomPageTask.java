@@ -40,20 +40,32 @@ public class ParseRoomPageTask extends BaseParsePageTask {
 
     public boolean run() throws JDOMException, IOException, PageFormatException {
         SAXBuilder builder = new SAXBuilder();
-        Document document = builder.build(file);
+        Document document = null;
+        Element root = null;
+        Element dataElement = null;
 
-        Element root = document.getRootElement();
-        Element dataElement = root
-                .getChild(
-                        "Body",
-                        Namespace.getNamespace("SOAP-ENV",
-                                "http://schemas.xmlsoap.org/soap/envelope/"))
-                .getChild("PostDocument",
-                        Namespace.getNamespace("Spider", "urn:http://service.sina.com.cn/spider"))
-                .getChild("document");
-
-        String pageClass = dataElement.getChild("class").getValue();
         try {
+            document = builder.build(file);
+
+            root = document.getRootElement();
+            dataElement = root
+                    .getChild(
+                            "Body",
+                            Namespace.getNamespace("SOAP-ENV",
+                                    "http://schemas.xmlsoap.org/soap/envelope/"))
+                    .getChild(
+                            "PostDocument",
+                            Namespace.getNamespace("Spider",
+                                    "urn:http://service.sina.com.cn/spider")).getChild("document");
+        } catch (JDOMException e) {
+            e.printStackTrace();
+            throw new PageFormatException("JDOMException happens");
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new PageFormatException("IOException happens");
+        }
+        try {
+            String pageClass = dataElement.getChild("class").getValue();
             String pagePlatform = dataElement.getChild("platform").getValue();
             String dataStr = dataElement.getChild("date").getValue();
             Date pageDate = GeneralHelper.parseWithMultipleFormats(dataStr);
@@ -61,6 +73,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             parseAndStoreMetric(allContItemElement, pageDate);
             return true;
         } catch (ParseException e) {
+            e.printStackTrace();
             throw new PageFormatException("platform, time or type element is not existed");
         }
 
@@ -116,7 +129,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         }
 
         if (income > 0) {
-            storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), platformId, income, pageDate);
+            storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), platformId, income,
+                    pageDate);
         }
         resourceManager.commit();
     }
@@ -145,8 +159,9 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                     platformId, money, ts);
             rm.getDatabaseSession().save(payByMinutes);
         } else {
-            System.out.println(String.format("exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore"
-                    , platformId, anchorId, audienceId));
+            System.out.println(String.format(
+                    "exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore",
+                    platformId, anchorId, audienceId));
         }
     }
 
@@ -156,21 +171,23 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
                     money, ts, periodStart);
             rm.getDatabaseSession().save(payPeriod);
-        }else {
-            System.out.println(String.format("exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore"
-                    , platformId, anchorId, audienceId));
+        } else {
+            System.out.println(String.format(
+                    "exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore",
+                    platformId, anchorId, audienceId));
         }
     }
 
-    private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int platformId, int income,
-            Date pageDate) {
+    private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int platformId,
+            int income, Date pageDate) {
         if (!rm.getDatabaseCache().existInAnchorIncomeByMinutes(anchorId, pageDate)) {
             AnchorIncomeByMinutes incomeByMinutes = new AnchorIncomeByMinutes(anchorId, platformId,
                     income, pageDate);
             rm.getDatabaseSession().save(incomeByMinutes);
         } else {
-            System.out.println(String.format("exist in minute pay for platform_id %d, anchor_id %d, ignore"
-                    , platformId, anchorId));
+            System.out.println(String.format(
+                    "exist in minute pay for platform_id %d, anchor_id %d, ignore", platformId,
+                    anchorId));
         }
     }
 

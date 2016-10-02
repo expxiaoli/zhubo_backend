@@ -23,6 +23,7 @@ public class ParseAndProcessApp {
         ProcessAllDataTask processTask = new ProcessAllDataTask();
         processTask.setUpdateTaskRun(true);
         processTask.setDates(new Date(2016-1900, 8, 27), new Date(2016-1900, 8, 28));
+        processTask.run();
         
         ModelHelper.markTaskGroupSuccess(rm, tgr);
     }

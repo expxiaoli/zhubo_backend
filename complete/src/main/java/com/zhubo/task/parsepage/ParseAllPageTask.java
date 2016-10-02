@@ -48,7 +48,16 @@ public class ParseAllPageTask {
     
     private int parseSuccessCount = 0;
     private int toParseCount = 0;
-    private List<String> errorFilePaths = Lists.newArrayList();
+    private List<ErrorFileInfo> errorFileInfos = Lists.newArrayList();
+    
+    public static class ErrorFileInfo {
+        public String filePath;
+        public String errorMessage;
+        public ErrorFileInfo(String filePath, String errorMessage) {
+            this.filePath = filePath;
+            this.errorMessage = errorMessage;
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public void run(String folderPath) throws InstantiationException, IllegalAccessException,
@@ -82,8 +91,8 @@ public class ParseAllPageTask {
                 "parse page success %d, in parse range %d. total page count %d", parseSuccessCount,
                 toParseCount, files.size()));
         System.out.println("error page:");
-        for (String errorFilePath : errorFilePaths) {
-            System.out.println(errorFilePath);
+        for (ErrorFileInfo info : errorFileInfos) {
+            System.out.println(info.filePath + " " + info.errorMessage);
         }
     }
 
@@ -109,9 +118,9 @@ public class ParseAllPageTask {
                         parseSuccessCount++;
                     }
                 } catch (JDOMException e) {
-                    errorFilePaths.add(file.getPath());
+                    errorFileInfos.add(new ErrorFileInfo(file.getPath(), e.getMessage()));
                 } catch (PageFormatException e) {
-                    errorFilePaths.add(file.getPath());
+                    errorFileInfos.add(new ErrorFileInfo(file.getPath(), e.getMessage()));
                 }
             }
             if (toParseCount % 20 == 0) {
