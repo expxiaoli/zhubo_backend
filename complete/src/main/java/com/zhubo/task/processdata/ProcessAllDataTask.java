@@ -58,7 +58,7 @@ public class ProcessAllDataTask {
 
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         ProcessAllDataTask task = new ProcessAllDataTask();
-        task.setDates(new Date(2016-1900, 8, 27), new Date(2016-1900, 8, 28));
+        task.setDates(new Date(2016-1900, 8, 27), new Date(2016-1900, 8, 29));
         task.run();
         System.out.println("process all data done");
     }
