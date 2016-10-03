@@ -13,8 +13,8 @@ public class ProcessAllDataTask {
             .newArrayList( 
                     ProcessAudiencePayByDaysFactory.class, //0918 done
                     ProcessMetricByDaysFactory.class,   //0918 done
-                    ProcessAnchorIncomeByDaysFactory.class //0919 done
-              //      ProcessAudienceTotalPayByDaysFactory.class
+                    ProcessAnchorIncomeByDaysFactory.class, //0919 done
+                    ProcessAudienceTotalPayByDaysFactory.class
                     );
 
     private Date start;
@@ -55,12 +55,12 @@ public class ProcessAllDataTask {
             rm.clearProcessDataCache();
         }
     }
-
+/*
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         ProcessAllDataTask task = new ProcessAllDataTask();
         task.setDates(new Date(2016-1900, 8, 27), new Date(2016-1900, 8, 29));
         task.run();
         System.out.println("process all data done");
     }
-    
+*/    
 }
