@@ -42,4 +42,11 @@ public class GeneralHelper {
             return sdfFormat2.parse(str);
         }
     }
+    
+    public static Date addDay(Date date, int day) {
+        Calendar now = Calendar.getInstance();  
+        now.setTime(date);  
+        now.add(Calendar.DAY_OF_YEAR, day);  
+        return now.getTime(); 
+    }
 }
