@@ -192,12 +192,12 @@ public class AnchorMetricController {
             String audienceName = audiences.get(0).getAudienceName();
             Long audienceAliasId = audiences.get(0).getAudienceAliasId();
 
-            List<AudienceTotalPayByDays> latestTotalPayByDays = getLatestTotalPayByDays(session, audienceId);
-            int latest7DaysTotalPay = getLatestXDaysTotalPay(latestTotalPayByDays, 7);
-            int latest30DaysTotalPay = getLatestXDaysTotalPay(latestTotalPayByDays, 30);
+            List<AudiencePayByDays> latestPayByDays = getLatestPayByDays(session, audienceId, anchorId);
+            int latest7DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 7);
+            int latest30DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 30);
             
             payItems.add(new AnchorIncomeItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
-                    payHistory, latest7DaysTotalPay, latest30DaysTotalPay));
+                    payHistory, latest7DaysSumPay, latest30DaysSumPay));
 
             count++;
         }
@@ -205,19 +205,20 @@ public class AnchorMetricController {
         return new AnchorIncomeDetailResponse(payItems);
     }
     
-    private List<AudienceTotalPayByDays> getLatestTotalPayByDays(Session session, Long audienceId) {
-        Query latestPayQuery = session.createQuery("from AudienceTotalPayByDays where audience_id = :audience_id and record_effective_time > :min_latest_ts");
+    private List<AudiencePayByDays> getLatestPayByDays(Session session, Long audienceId, Long anchorId) {
+        Query latestPayQuery = session.createQuery("from AudiencePayByDays where audience_id = :audience_id and anchor_id = :anchor_id and record_effective_time > :min_latest_ts");
         Date minLatestTs = GeneralHelper.addDay(new Date(), -31);
         latestPayQuery.setParameter("min_latest_ts", minLatestTs);
         latestPayQuery.setParameter("audience_id", audienceId);
+        latestPayQuery.setParameter("anchor_id", anchorId);
         return latestPayQuery.list();
     }
     
-    private int getLatestXDaysTotalPay(List<AudienceTotalPayByDays> records, int days) {
+    private int getLatestXDaysTotalPay(List<AudiencePayByDays> records, int days) {
        int fixDays = days + 1;
        Date minTs = GeneralHelper.addDay(new Date(), -fixDays);
        int sum = 0;
-       for(AudienceTotalPayByDays record : records) {
+       for(AudiencePayByDays record : records) {
            if(record.getRecordEffectiveTime().compareTo(minTs) > 0) {
                sum += record.getMoney();
            }
@@ -290,11 +291,11 @@ public class AnchorMetricController {
             String audienceName = audiences.get(0).getAudienceName();
             Long audienceAliasId = audiences.get(0).getAudienceAliasId();
             
-            List<AudienceTotalPayByDays> latestTotalPayByDays = getLatestTotalPayByDays(session, audienceId);
-            int latest7DaysTotalPay = getLatestXDaysTotalPay(latestTotalPayByDays, 7);
-            int latest30DaysTotalPay = getLatestXDaysTotalPay(latestTotalPayByDays, 30);
+            List<AudiencePayByDays> latestPayByDays = getLatestPayByDays(session, audienceId, anchorId);
+            int latest7DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 7);
+            int latest30DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 30);
             payItems.add(new AnchorIncomeItem(audienceId, audienceAliasId, audienceName, totalPay, lastPayTime, rate,
-                    payHistory, latest7DaysTotalPay, latest30DaysTotalPay));
+                    payHistory, latest7DaysSumPay, latest30DaysSumPay));
 
             count++;
         }
