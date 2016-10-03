@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "TaskRun")
+@Table(name = "TaskRun_1003")
 public class TaskRun {
     @Id
     @GeneratedValue

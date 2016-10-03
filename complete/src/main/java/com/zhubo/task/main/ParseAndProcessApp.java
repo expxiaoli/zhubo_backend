@@ -76,7 +76,7 @@ public class ParseAndProcessApp {
         String latestProcessedDate = getLatestProcessedDate();
         List<String> folderNamesToProcess = Lists.newArrayList();
         for(String folderName : validFolderNames) {
-            if(folderName.compareTo(latestProcessedDate) > 0) {
+            if(latestProcessedDate == null || folderName.compareTo(latestProcessedDate) > 0) {
                 folderNamesToProcess.add(folderName);
             }
         }

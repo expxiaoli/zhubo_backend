@@ -204,13 +204,20 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             return audienceIdInCache;
         }
 
-        Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceName);
+        Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceAliasId, audienceName);
         if (oldAudience == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
             rm.commit();
             return newAudience.getAudienceId();
-        } else if (audienceAliasId != null && oldAudience.getAudienceAliasId() == null) {
+        } else if (audienceName != null && 
+                (oldAudience.getAudienceName() == null || !audienceName.equals(oldAudience.getAudienceName()))) {
+            oldAudience.setAudienceName(audienceName);
+            rm.getDatabaseSession().update(oldAudience);
+            rm.commit();
+            return oldAudience.getAudienceId();
+        } else if(audienceAliasId != null &&
+                (oldAudience.getAudienceAliasId() == null || !audienceAliasId.equals(oldAudience.getAudienceAliasId()))){
             oldAudience.setAudienceAliasId(audienceAliasId);
             rm.getDatabaseSession().update(oldAudience);
             rm.commit();
@@ -255,11 +262,12 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             this.money = money;
         }
     }
-    /*
-     * public static void main(String[] args) throws JDOMException, IOException,
-     * ParseException { ParseQixiuRoomPageTask task = new
-     * ParseQixiuRoomPageTask( "sample_data/room_page",
-     * ResourceManager.generateResourceManager()); task.run(); }
-     */
+/*
+    public static void main(String[] args) throws JDOMException, IOException, ParseException, PageFormatException {
 
+        ParseRoomPageTask task = new ParseRoomPageTask("/Users/xiao.li/coding/zhubo_data/0929",
+                ResourceManager.generateResourceManager(), 1);
+        task.run();
+    }
+*/
 }

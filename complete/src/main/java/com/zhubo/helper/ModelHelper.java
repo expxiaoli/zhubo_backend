@@ -35,10 +35,12 @@ public class ModelHelper {
         }
     }
     
-    public static Audience getAudience(ResourceManager rm, int platformId, String audienceName) {
+    public static Audience getAudience(ResourceManager rm, int platformId, Long audienceAliasId, String audienceName) {
         Session session = rm.getDatabaseSession();
-        Query query = session.createQuery("from Audience where audience_name = :audience_name");
+        Query query = session.createQuery("from Audience where (audience_alias_id = :audience_alias_id or audience_name =: audience_name) and platform_id = :platform_id");
+        query.setParameter("platform_id", platformId);
         query.setParameter("audience_name", audienceName);
+        query.setParameter("audience_alias_id", audienceAliasId);
         List<Audience> audiences = query.list();
         if(audiences.isEmpty()) {
             return null;
