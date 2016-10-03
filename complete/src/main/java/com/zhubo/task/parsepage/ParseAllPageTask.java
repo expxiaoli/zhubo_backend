@@ -84,8 +84,6 @@ public class ParseAllPageTask {
             rm.clearParsePageCache();
         }
 
-        System.out.println("begin to store cache to database");
-        rm.getDatabaseCache().batchSave();
         System.out.println("ParseAllPageTask done");
         System.out.println(String.format(
                 "parse page success %d, in parse range %d. total page count %d", parseSuccessCount,
@@ -122,11 +120,11 @@ public class ParseAllPageTask {
                 } catch (PageFormatException e) {
                     errorFileInfos.add(new ErrorFileInfo(file.getPath(), e.getMessage()));
                 }
-            }
-            if (toParseCount % 20 == 0) {
-                System.out.println(String.format(
-                        "parse page success %d, in parse range %d. total page count %d",
-                        parseSuccessCount, toParseCount, files.size()));
+                if (toParseCount % 100 == 0) {
+                    System.out.println(String.format(
+                            "parse page success %d, in parse range %d. total page count %d",
+                            parseSuccessCount, toParseCount, files.size()));
+                }
             }
         }
         if(updateTaskRun) {

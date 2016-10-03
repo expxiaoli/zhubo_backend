@@ -11,10 +11,10 @@ import com.zhubo.helper.ModelHelper;
 public class ProcessAllDataTask {
     private static List<Class> processDataFactoryClasses = Lists
             .newArrayList( 
-                    //ProcessAudiencePayByDaysFactory.class //0918 done
-                    //ProcessMetricByDaysFactory.class   //0918 done
-                   // ProcessAnchorIncomeByDaysFactory.class //0919 done
-                    ProcessAudienceTotalPayByDaysFactory.class
+                    ProcessAudiencePayByDaysFactory.class, //0918 done
+                    ProcessMetricByDaysFactory.class,   //0918 done
+                    ProcessAnchorIncomeByDaysFactory.class //0919 done
+              //      ProcessAudienceTotalPayByDaysFactory.class
                     );
 
     private Date start;
@@ -55,12 +55,12 @@ public class ProcessAllDataTask {
             rm.clearProcessDataCache();
         }
     }
-/*
+
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
         ProcessAllDataTask task = new ProcessAllDataTask();
-        task.setDates(new Date(2016-1900, 8, 1), new Date(2016-1900, 8, 30));
+        task.setDates(new Date(2016-1900, 8, 27), new Date(2016-1900, 8, 28));
         task.run();
         System.out.println("process all data done");
     }
-*/    
+    
 }

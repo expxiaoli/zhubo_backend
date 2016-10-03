@@ -28,6 +28,14 @@ public class TaskGroupRun {
     @Column(name = "data_time")
     private String dataTime;
     
+    public String getDataTime() {
+        return dataTime;
+    }
+    
+    public TaskGroupRun() {
+        
+    }
+    
     public TaskGroupRun(String dataTime, Date created) {
         this(dataTime, created, null, false);
     }

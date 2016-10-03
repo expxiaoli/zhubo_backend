@@ -106,9 +106,6 @@ public class DatabaseCache {
         clearAudienceTotalPayByDays();
     }
     
-    public void batchSave() {
-    }
-    
     private void batchLoadAudienceData(int platformId) {
         audienceAliasIdToIdMapper = Maps.newHashMap();
         audienceNameToIdMapper = Maps.newHashMap();
