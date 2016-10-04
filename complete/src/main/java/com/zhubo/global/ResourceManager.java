@@ -128,6 +128,9 @@ public class ResourceManager {
     
 
     public void commit() {
+        if(transaction == null || transaction.wasCommitted()) {
+            transaction = session.beginTransaction();
+        }
         transaction.commit();
     }
 
