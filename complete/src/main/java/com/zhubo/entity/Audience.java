@@ -9,7 +9,7 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "Audience_1003", indexes = {
+@Table(name = "pl_Audience", indexes = {
         @Index(columnList = "platform_id,audience_id", name = "audience_simple_index")
 })
 public class Audience {

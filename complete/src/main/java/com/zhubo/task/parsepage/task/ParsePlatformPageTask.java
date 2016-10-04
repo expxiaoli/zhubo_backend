@@ -2,6 +2,7 @@ package com.zhubo.task.parsepage.task;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import org.jdom.Document;
@@ -45,7 +46,7 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
                 if (allContItemElement == null) {
                     throw new PageFormatException("cont_items is not existed");
                 }
-                parseAndStoreAnchorContent(allContItemElement, pageType);
+                parseAndStoreAnchorContent(allContItemElement, pageType, pageTime);
                 return true;
             } else {
                 throw new PageFormatException("platform, time or type element is not existed");
@@ -56,7 +57,7 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
 
     }
 
-    public void parseAndStoreAnchorContent(Element root, String pageType) {
+    public void parseAndStoreAnchorContent(Element root, String pageType, Date pageDate) {
         List<Element> itemElements = root.getChildren();
         for (Element itemElement : itemElements) {
             Long roomNumber = Long.valueOf(itemElement.getChildText("room_number"));
@@ -65,7 +66,7 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
             AnchorObject anchorInCache = resourceManager.getDatabaseCache()
                     .getAnchorObjectFromCache(roomNumber);
             if (anchorInCache == null) {
-                Anchor anchor = new Anchor(platformId, roomNumber, nickName);
+                Anchor anchor = new Anchor(platformId, roomNumber, nickName, pageDate);
                 anchor.setArea(area);
                 anchor.setType(pageType);
                 resourceManager.getDatabaseSession().save(anchor);

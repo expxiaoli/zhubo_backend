@@ -9,7 +9,7 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "Anchor_1003", indexes = {
+@Table(name = "pl_Anchor", indexes = {
         @Index(columnList = "platform_id,anchor_id", name = "anchor_simple_index")
 })
 public class Anchor {
@@ -42,20 +42,24 @@ public class Anchor {
 	@Column(name = "area")
 	private String area;
 	
+	@Column(name = "page_date")
+	private Date pageDate;
+	
 	public Anchor() {
 		
 	}
 	
-	public Anchor(Integer platformId, Long anchorAliasId, String anchorName) {
-		this(platformId, anchorAliasId, anchorName, new Date(), new Date(), true);
+	public Anchor(Integer platformId, Long anchorAliasId, String anchorName, Date pageDate) {
+		this(platformId, anchorAliasId, anchorName, new Date(), new Date(), pageDate, true);
 	}
 	
-	public Anchor(Integer platformId, Long anchorAliasId, String anchorName, Date created, Date lastUpdated,  boolean enabled) {
+	public Anchor(Integer platformId, Long anchorAliasId, String anchorName, Date created, Date lastUpdated, Date pageDate, boolean enabled) {
 		this.platformId = platformId;
 		this.anchorAliasId = anchorAliasId;
 		this.anchorName = anchorName;
 		this.created = created;
 		this.lastUpdated = lastUpdated;
+		this.pageDate = pageDate;
 		this.enabled = enabled;
 	}
 	
