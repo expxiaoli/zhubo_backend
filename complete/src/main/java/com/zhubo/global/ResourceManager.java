@@ -99,7 +99,9 @@ public class ResourceManager {
         if(session == null) {
             session = sessionFactory.openSession();
         }
-        transaction = session.beginTransaction();
+        if(transaction == null || transaction.wasCommitted()) {
+            transaction = session.beginTransaction();
+        }
         return session;
     }
     
