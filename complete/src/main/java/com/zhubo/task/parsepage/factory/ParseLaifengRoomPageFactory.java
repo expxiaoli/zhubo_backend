@@ -6,13 +6,9 @@ import com.zhubo.task.parsepage.task.ParseRoomPageTask;
 
 public class ParseLaifengRoomPageFactory extends BaseParsePageFactory {
     
-    static {
-        platformId = 2;
-    }
-    
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParseRoomPageTask(filePath, resourceManager, platformId);
+        return new ParseRoomPageTask(filePath, resourceManager, 2);
     }
 
     @Override

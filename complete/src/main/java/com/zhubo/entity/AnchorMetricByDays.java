@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "pl_AnchorMetricByDays")
+@Table(name = "1004_AnchorMetricByDays")
 public class AnchorMetricByDays {
     @Id
     @GeneratedValue
