@@ -99,7 +99,7 @@ public class ParseAllPageTask {
     }
 
     private void parseFiles(String folderPath, List<File> files, Integer platformId, Class factoryClass, ResourceManager rm)
-            throws IOException, InstantiationException, IllegalAccessException {
+            throws IOException, InstantiationException, IllegalAccessException, ParseException {
         BaseParsePageFactory factory;
         BaseParsePageTask task;
         factory = (BaseParsePageFactory) factoryClass.newInstance();

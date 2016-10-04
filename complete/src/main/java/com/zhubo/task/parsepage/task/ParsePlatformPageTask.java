@@ -2,6 +2,7 @@ package com.zhubo.task.parsepage.task;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import com.zhubo.entity.Anchor;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.DatabaseCache.AnchorObject;
 import com.zhubo.global.ResourceManager;
+import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 
 public class ParsePlatformPageTask extends BaseParsePageTask {
@@ -22,7 +24,7 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
         super(filePath, resourceManager, platformId);
     }
 
-    public boolean run() throws JDOMException, IOException, PageFormatException {
+    public boolean run() throws JDOMException, IOException, PageFormatException, ParseException {
         SAXBuilder builder = new SAXBuilder();
         Document document = builder.build(file);
 
@@ -41,12 +43,13 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
                     && dataElement.getChild("type") != null) {
                 String pagePlatform = dataElement.getChild("platform").getValue();
                 String pageTime = dataElement.getChild("time").getValue();
+                Date pageDate = GeneralHelper.parseWithMultipleFormats(pageTime);
                 String pageType = dataElement.getChild("type").getValue();
                 Element allContItemElement = dataElement.getChild("cont_items");
                 if (allContItemElement == null) {
                     throw new PageFormatException("cont_items is not existed");
                 }
-                parseAndStoreAnchorContent(allContItemElement, pageType, pageTime);
+                parseAndStoreAnchorContent(allContItemElement, pageType, pageDate);
                 return true;
             } else {
                 throw new PageFormatException("platform, time or type element is not existed");
