@@ -2,6 +2,7 @@ package com.zhubo.task.parsepage.task;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.jdom.JDOMException;
 
@@ -19,5 +20,5 @@ public abstract class BaseParsePageTask {
         this.platformId = platformId;
     }
    
-    public abstract boolean run() throws JDOMException, IOException, PageFormatException;
+    public abstract boolean run() throws JDOMException, IOException, PageFormatException, ParseException;
 }

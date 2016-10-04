@@ -108,7 +108,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             }
         }
 
-        Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName);
+        Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
 
         for (Metric metric : metrics) {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchor.getAnchorId(),
@@ -225,12 +225,12 @@ public class ParseRoomPageTask extends BaseParsePageTask {
     }
 
     public Anchor getAnchorOrNew(ResourceManager rm, Integer platformId, Long anchorAliasId,
-            String anchorName) {
+            String anchorName, Date pageDate) {
         Anchor anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         if (anchor == null) {
             System.out.println(String.format("platform_id %d, anchor_alias_id %d is not existed",
                     platformId, anchorAliasId));
-            Anchor newAnchor = new Anchor(platformId, anchorAliasId, anchorName);
+            Anchor newAnchor = new Anchor(platformId, anchorAliasId, anchorName, pageDate);
             rm.getDatabaseSession().save(newAnchor);
             rm.commit();
             anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);

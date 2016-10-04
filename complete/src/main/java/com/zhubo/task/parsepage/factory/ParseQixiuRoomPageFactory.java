@@ -5,14 +5,10 @@ import com.zhubo.task.parsepage.task.BaseParsePageTask;
 import com.zhubo.task.parsepage.task.ParseRoomPageTask;
 
 public class ParseQixiuRoomPageFactory extends BaseParsePageFactory {
-
-    static {
-        platformId = 1;
-    }
     
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParseRoomPageTask(filePath, resourceManager, platformId);
+        return new ParseRoomPageTask(filePath, resourceManager, 1);
     }
     
     @Override

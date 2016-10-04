@@ -5,14 +5,10 @@ import com.zhubo.task.parsepage.task.BaseParsePageTask;
 import com.zhubo.task.parsepage.task.ParsePlatformPageTask;
 
 public class ParseLaifengPlatformPageFactory extends BaseParsePageFactory {
-
-    static {
-        platformId = 2;
-    }
     
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParsePlatformPageTask(filePath, resourceManager, platformId);
+        return new ParsePlatformPageTask(filePath, resourceManager, 2);
     }
 
     @Override
@@ -24,4 +20,6 @@ public class ParseLaifengPlatformPageFactory extends BaseParsePageFactory {
     public String getTaskName() {
         return "ParsePlatformPageTask";
     }
+    
+   
 }
