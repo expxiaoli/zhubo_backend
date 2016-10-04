@@ -78,6 +78,12 @@ public class ResourceManager {
         sb.applySettings(cfg.getProperties());
         StandardServiceRegistry standardServiceRegistry = sb.build();
         sessionFactory = cfg.buildSessionFactory(standardServiceRegistry);
+        if(session == null) {
+            session = sessionFactory.openSession();
+        }
+        if(transaction == null) {
+            transaction = session.beginTransaction();
+        }
     }
 
     private void initPlatform(ResourceManager rm) {
