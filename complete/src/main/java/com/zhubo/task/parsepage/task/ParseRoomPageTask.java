@@ -208,19 +208,16 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         if (oldAudience == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
-            rm.commit();
             return newAudience.getAudienceId();
         } else if (audienceName != null && 
                 (oldAudience.getAudienceName() == null || !audienceName.equals(oldAudience.getAudienceName()))) {
             oldAudience.setAudienceName(audienceName);
             rm.getDatabaseSession().update(oldAudience);
-            rm.commit();
             return oldAudience.getAudienceId();
         } else if(audienceAliasId != null &&
                 (oldAudience.getAudienceAliasId() == null || !audienceAliasId.equals(oldAudience.getAudienceAliasId()))){
             oldAudience.setAudienceAliasId(audienceAliasId);
             rm.getDatabaseSession().update(oldAudience);
-            rm.commit();
             return oldAudience.getAudienceId();
         } else {
             return oldAudience.getAudienceId();
