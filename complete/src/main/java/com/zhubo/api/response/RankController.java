@@ -52,7 +52,7 @@ public class RankController {
         
         List<RankItem> rankItems = Lists.newArrayList();
         for(Long anchorId : incomeMapping.keySet()) {
-            rankItems.add(new RankItem(anchorId, null, null, incomeMapping.get(anchorId)));
+            rankItems.add(new RankItem(anchorId, null, null, null, incomeMapping.get(anchorId)));
         }
         Collections.sort(rankItems, new RankComparator());
         List<RankItem> finalRankItems = Lists.newArrayList();
@@ -63,6 +63,7 @@ public class RankController {
             Anchor anchor = ModelHelper.getAnchor(ResourceManager.generateResourceManager(), item.getId());           
             if(anchor != null) {
                 item.setName(anchor.getAnchorName());
+                item.setAliasID(anchor.getAnchorAliasId());
             }
             finalRankItems.add(item);
             index++;
