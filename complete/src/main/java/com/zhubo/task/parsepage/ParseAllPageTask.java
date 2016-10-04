@@ -67,6 +67,10 @@ public class ParseAllPageTask {
 
         File folder = new File(folderPath);
         List<File> files = getValidFiles(folder.listFiles());
+        if(files.size() == 0) {
+            System.out.println("empty page folder");
+            return;
+        }
         Collections.sort(files, new byPageTimeComparator());
 
         String minMiddleName = getMinMiddleName(files);
