@@ -35,6 +35,18 @@ public class ModelHelper {
         }
     }
     
+    public static Anchor getAnchor(ResourceManager rm, Long anchorId) {
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from Anchor where anchor_id = :anchor_id");
+        query.setParameter("anchor_id", anchorId);
+        List<Anchor> anchors = query.list();
+        if(anchors.isEmpty()) {
+            return null;
+        } else {
+            return anchors.get(0);
+        }
+    }
+    
     public static Audience getAudience(ResourceManager rm, int platformId, Long audienceAliasId, String audienceName) {
         Session session = rm.getDatabaseSession();
         Query query = session.createQuery("from Audience where (audience_alias_id = :audience_alias_id or audience_name = :audience_name) and platform_id = :platform_id");
