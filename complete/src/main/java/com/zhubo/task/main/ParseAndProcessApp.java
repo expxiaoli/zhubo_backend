@@ -139,10 +139,10 @@ public class ParseAndProcessApp {
             return null;
         }
     }
-
+/*
     public static void main(String[] args) throws InstantiationException, IllegalAccessException,
             IOException, ParseException {
         new ParseAndProcessApp(args[0]).run();
     }
-
+*/
 }

@@ -61,6 +61,18 @@ public class ModelHelper {
         }
     }
     
+    public static Audience getAudience(ResourceManager rm, Long audienceId) {
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from Audience where audience_id = :audience_id");
+        query.setParameter("audience_id", audienceId);
+        List<Audience> audiences = query.list();
+        if(audiences.isEmpty()) {
+            return null;
+        } else {
+            return audiences.get(0);
+        }
+    }
+    
     public static Platform getPlatform(ResourceManager rm, String platformName) {
         Session session = rm.getDatabaseSession();
         Query query = session.createQuery("from Platform where platform_name = :platform_name");
