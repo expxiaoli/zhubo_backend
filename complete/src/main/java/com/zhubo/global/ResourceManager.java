@@ -99,9 +99,7 @@ public class ResourceManager {
         if(session == null) {
             session = sessionFactory.openSession();
         }
-        if(transaction == null) {
-            transaction = session.beginTransaction();
-        }
+        transaction = session.beginTransaction();
         return session;
     }
     
@@ -120,10 +118,6 @@ public class ResourceManager {
             session.close();
             session = null;
         }
-    }
-
-    public Transaction getTransaction() {
-        return transaction;
     }
     
     public DatabaseCache getDatabaseCache() {
