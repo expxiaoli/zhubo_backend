@@ -127,9 +127,6 @@ public class ResourceManager {
 
     public void commit() {
         transaction.commit();
-        session.close();
-        session = sessionFactory.openSession();
-        transaction = session.beginTransaction();
     }
 
     public synchronized void close() {
