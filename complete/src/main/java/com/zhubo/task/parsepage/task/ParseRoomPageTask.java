@@ -243,8 +243,11 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             System.out.println(String.format("platform_id %d, anchor_alias_id %d is not existed",
                     platformId, anchorAliasId));
             anchor = new Anchor(platformId, anchorAliasId, anchorName, pageDate);
-            rm.getDatabaseSession().save(anchor);
+            rm.getDatabaseSession().save(anchor);            
             rm.commit();
+            resourceManager.getDatabaseCache().setAnchorObjectInCache(
+                    anchor.getAnchorAliasId(),
+                    new AnchorObject(anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
         }
         return anchor.getAnchorId();
     }
