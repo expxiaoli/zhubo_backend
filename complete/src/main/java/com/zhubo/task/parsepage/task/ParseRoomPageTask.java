@@ -246,18 +246,21 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
             needCommit = true;
+            rm.getDatabaseCache().setAudienceMapper(audienceAliasId, audienceName, newAudience.getAudienceId());
             return newAudience.getAudienceId();
         } else if (audienceName != null && 
                 (oldAudience.getAudienceName() == null || !audienceName.equals(oldAudience.getAudienceName()))) {
             oldAudience.setAudienceName(audienceName);
             rm.getDatabaseSession().update(oldAudience);
             needCommit = true;
+            rm.getDatabaseCache().setAudienceMapper(null, audienceName, oldAudience.getAudienceId());
             return oldAudience.getAudienceId();
         } else if(audienceAliasId != null &&
                 (oldAudience.getAudienceAliasId() == null || !audienceAliasId.equals(oldAudience.getAudienceAliasId()))){
             oldAudience.setAudienceAliasId(audienceAliasId);
             rm.getDatabaseSession().update(oldAudience);
             needCommit = true;
+            rm.getDatabaseCache().setAudienceMapper(audienceAliasId, null, oldAudience.getAudienceId());
             return oldAudience.getAudienceId();
         } else {
             return oldAudience.getAudienceId();

@@ -461,6 +461,15 @@ public class DatabaseCache {
         return audienceNameToIdMapper.get(audienceName);
     }
     
+    public void setAudienceMapper(Long aliasId, String audienceName, Long audienceId) {
+        if(aliasId != null) {
+            audienceAliasIdToIdMapper.put(aliasId, audienceId);
+        }
+        if(audienceName != null) {
+            audienceNameToIdMapper.put(audienceName, audienceId);
+        }
+    }
+    
     private void batchLoadMetricByDays(int platformId) {
         metricByDaysDatesMapper = Maps.newHashMap();
         Session session = rm.getDatabaseSession();
