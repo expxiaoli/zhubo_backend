@@ -122,7 +122,11 @@ public class ParseAndProcessApp {
                     return false;
                 }
             }
-            return true;
+            if(name.compareTo("20161001") >= 0) {
+                return true;
+            } else {
+                return false;
+            }
         }
         return false;
     }
