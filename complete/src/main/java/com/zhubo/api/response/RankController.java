@@ -28,7 +28,7 @@ import com.zhubo.helper.ModelHelper;
 @RestController
 public class RankController {
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-    private final int rankNumber = 10;
+    private final int rankNumber = 10;    
     
     @RequestMapping("/audience_total_pay_day_rank")
     public AudienceTotalPayRankResponse getAudienceTotalPayDayRank(@RequestParam(value = "platform_id") int platformId,
