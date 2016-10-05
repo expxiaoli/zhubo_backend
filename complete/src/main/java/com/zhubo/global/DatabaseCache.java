@@ -303,7 +303,11 @@ public class DatabaseCache {
         if(oldPayPeriod == null) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
             return null;
-        } else if (oldPayPeriod.money < payPeriod.money) {
+        } else if (oldPayPeriod.recordEffectiveTime.compareTo(payPeriod.recordEffectiveTime) >= 0)  {
+            System.out.println("-_-> is old pay data, ignore get diff money");
+            return 0;
+        }
+        else if (oldPayPeriod.money < payPeriod.money) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
             int diffMoney = payPeriod.money - oldPayPeriod.money;
             return diffMoney;

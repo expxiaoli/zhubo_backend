@@ -106,7 +106,10 @@ public class ResourceManager {
             beginTransaction = true;
         }
         long end = System.currentTimeMillis();
-        System.out.println("getDatabaseSession begin transaction: " + beginTransaction + " :" + (end-start));
+        long duration = end - start;
+        if(duration > 5) {
+            System.out.println("getDatabaseSession begin transaction: " + beginTransaction + " :" + duration);
+        }
         return session;
     }
     

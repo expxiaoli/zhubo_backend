@@ -24,6 +24,7 @@ import com.zhubo.entity.AudiencePayByMinutes;
 import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.DatabaseCache;
+import com.zhubo.global.DatabaseCache.AnchorObject;
 import com.zhubo.global.DatabaseCache.PayPeriodObject;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
@@ -32,10 +33,12 @@ import com.zhubo.task.processdata.TimeUnit;
 
 public class ParseRoomPageTask extends BaseParsePageTask {
     private Integer income;
+    private boolean needCommit;
 
     public ParseRoomPageTask(String filePath, ResourceManager resourceManager, int platformId) {
         super(filePath, resourceManager, platformId);
         income = 0;
+        needCommit = false;
     }
 
     public boolean run() throws JDOMException, IOException, PageFormatException {
@@ -114,16 +117,17 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         long step2 = System.currentTimeMillis();
         System.out.println("*** ParseRoomPageTask parseAndStoreMetric parse xml more: " + (step2-step1));
 
-        Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
+        Long anchorId = getAnchorIdOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
         long step3 = System.currentTimeMillis();
         System.out.println("*** ParseRoomPageTask parseAndStoreMetric getAnchorOrNew: " + (step3-step2));
         
         for (Metric metric : metrics) {
-            if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchor.getAnchorId(),
+            if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchorId,
                     metric.type, pageDate)) {
                 AnchorMetricByMinutes metricByMinutes = new AnchorMetricByMinutes(
-                        anchor.getAnchorId(), platformId, metric.type, metric.value, pageDate);
+                        anchorId, platformId, metric.type, metric.value, pageDate);
                 resourceManager.getDatabaseSession().save(metricByMinutes);
+                needCommit = true;
             }
         }
         long step4 = System.currentTimeMillis();
@@ -136,7 +140,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             long step12 = System.currentTimeMillis();
             System.out.println("* ParseRoomPageTask parseAndStoreMetric search audience one: " + (step12 - step11));
             if (pay.money != null) {
-                storePayPeriodAndPayMinute(resourceManager, audienceId, anchor.getAnchorId(),
+                storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId,
                         platformId, pay.money, pageDate);
                 long step13 = System.currentTimeMillis();
                 System.out.println("* ParseRoomPageTask parseAndStoreMetric storePayPeriodAndPayMinute one: " + (step13 - step12));
@@ -146,13 +150,18 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         System.out.println("*** ParseRoomPageTask parseAndStoreMetric savePayPeriodAndPayByMinutes total: " + (step5-step4));
 
         if (income > 0) {
-            storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), platformId, income,
+            storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income,
                     pageDate);
         }
         long step6 = System.currentTimeMillis();
         System.out.println("*** ParseRoomPageTask parseAndStoreMetric saveIncome: " + (step6-step5));
         
-        resourceManager.commit();
+        if(needCommit) {
+            resourceManager.commit();
+        } else {
+            System.out.println("old page, ignore commit");
+        }
+        
         long step7 = System.currentTimeMillis();
         System.out.println("*** ParseRoomPageTask parseAndStoreMetric commit: " + (step7-step6));
     }
@@ -180,6 +189,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             AudiencePayByMinutes payByMinutes = new AudiencePayByMinutes(audienceId, anchorId,
                     platformId, money, ts);
             rm.getDatabaseSession().save(payByMinutes);
+            needCommit = true;
         } else {
             System.out.println(String.format(
                     "exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore",
@@ -193,6 +203,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
                     money, ts, periodStart);
             rm.getDatabaseSession().save(payPeriod);
+            needCommit = true;
         } else {
             System.out.println(String.format(
                     "exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore",
@@ -206,6 +217,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             AnchorIncomeByMinutes incomeByMinutes = new AnchorIncomeByMinutes(anchorId, platformId,
                     income, pageDate);
             rm.getDatabaseSession().save(incomeByMinutes);
+            needCommit = true;
         } else {
             System.out.println(String.format(
                     "exist in minute pay for platform_id %d, anchor_id %d, ignore", platformId,
@@ -217,7 +229,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         return GeneralHelper.getAggregateDate(ts, TimeUnit.WEEK);
     }
 
-    public static Long getAudienceIdOrNewOrUpdate(ResourceManager rm, int platformId,
+    public Long getAudienceIdOrNewOrUpdate(ResourceManager rm, int platformId,
             String audienceName, Long audienceAliasId) {
         DatabaseCache dbCache = rm.getDatabaseCache();
         Long audienceIdInCache = dbCache.getIdFromAudienceAliasIdOrAudienceName(platformId,
@@ -230,34 +242,40 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         if (oldAudience == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
+            needCommit = true;
             return newAudience.getAudienceId();
         } else if (audienceName != null && 
                 (oldAudience.getAudienceName() == null || !audienceName.equals(oldAudience.getAudienceName()))) {
             oldAudience.setAudienceName(audienceName);
             rm.getDatabaseSession().update(oldAudience);
+            needCommit = true;
             return oldAudience.getAudienceId();
         } else if(audienceAliasId != null &&
                 (oldAudience.getAudienceAliasId() == null || !audienceAliasId.equals(oldAudience.getAudienceAliasId()))){
             oldAudience.setAudienceAliasId(audienceAliasId);
             rm.getDatabaseSession().update(oldAudience);
+            needCommit = true;
             return oldAudience.getAudienceId();
         } else {
             return oldAudience.getAudienceId();
         }
     }
 
-    public Anchor getAnchorOrNew(ResourceManager rm, Integer platformId, Long anchorAliasId,
+    public Long getAnchorIdOrNew(ResourceManager rm, Integer platformId, Long anchorAliasId,
             String anchorName, Date pageDate) {
+        AnchorObject cacheAnchorObject = rm.getDatabaseCache().getAnchorObjectFromCache(anchorAliasId);
+        if(cacheAnchorObject != null) {
+            return cacheAnchorObject.anchorId;
+        }
         Anchor anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         if (anchor == null) {
             System.out.println(String.format("platform_id %d, anchor_alias_id %d is not existed",
                     platformId, anchorAliasId));
-            Anchor newAnchor = new Anchor(platformId, anchorAliasId, anchorName, pageDate);
-            rm.getDatabaseSession().save(newAnchor);
+            anchor = new Anchor(platformId, anchorAliasId, anchorName, pageDate);
+            rm.getDatabaseSession().save(anchor);
             rm.commit();
-            anchor = ModelHelper.getAnchor(rm, platformId, anchorAliasId);
         }
-        return anchor;
+        return anchor.getAnchorId();
     }
 
     public static class Metric {
