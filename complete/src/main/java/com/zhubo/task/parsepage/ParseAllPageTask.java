@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -125,7 +126,7 @@ public class ParseAllPageTask {
                     errorFileInfos.add(new ErrorFileInfo(file.getPath(), e.getMessage()));
                 }
                 if (toParseCount % 100 == 0) {
-                    System.out.println(String.format(
+                    System.out.println(new Date() + " " + String.format(
                             "parse page success %d, in parse range %d. total page count %d",
                             parseSuccessCount, toParseCount, files.size()));
                 }

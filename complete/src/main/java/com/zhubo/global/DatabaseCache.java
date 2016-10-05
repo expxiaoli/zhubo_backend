@@ -453,11 +453,11 @@ public class DatabaseCache {
         return getIdFromAudienceName(platformId, audienceName);
     }
     
-    private Long getIdFromAudienceAliasId(int platformId, long aliasId) {
+    public Long getIdFromAudienceAliasId(int platformId, long aliasId) {
         return audienceAliasIdToIdMapper.get(aliasId);
     }
     
-    private Long getIdFromAudienceName(int platformId, String audienceName) {
+    public Long getIdFromAudienceName(int platformId, String audienceName) {
         return audienceNameToIdMapper.get(audienceName);
     }
     

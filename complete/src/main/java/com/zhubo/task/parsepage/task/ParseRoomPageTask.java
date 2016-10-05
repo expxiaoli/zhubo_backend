@@ -46,7 +46,6 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         Document document = null;
         Element root = null;
         Element dataElement = null;
-        long start = System.currentTimeMillis();
         
         try {
             document = builder.build(file);
@@ -74,12 +73,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             String dataStr = dataElement.getChild("date").getValue();
             Date pageDate = GeneralHelper.parseWithMultipleFormats(dataStr);
             Element allContItemElement = dataElement.getChild("cont_items");
-            long end = System.currentTimeMillis();            
-            System.out.println("*** ParseRoomPageTask parse xml: " + (end-start));
-           
+         
             parseAndStoreMetric(allContItemElement, pageDate);
-            long end2 = System.currentTimeMillis();
-            System.out.println("************** ParseRoomPageTask: " + (end2-start) + "\n\n");
             return true;
         } catch (ParseException e) {
             e.printStackTrace();
@@ -94,7 +89,6 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         String anchorName = null;
         List<Metric> metrics = Lists.newArrayList();
         Map<String, Pay> pays = Maps.newHashMap();
-        long step1 = System.currentTimeMillis();
         for (Element itemElement : itemElements) {
             if (itemElement.getChild("cont_item_name") != null) {
                 String itemName = itemElement.getChildText("cont_item_name");
@@ -113,17 +107,13 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                         .getChildText("vipuserid"));
                 Integer money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null
                         : Integer.valueOf(itemElement.getChildText("top_money"));
-                pays.put(audienceName, new Pay(audienceAliasId, audienceName, money));
-
+                if(audienceName != null && audienceAliasId != null) {
+                    pays.put(audienceName, new Pay(audienceAliasId, audienceName, money));
+                }
             }
         }
-        long step2 = System.currentTimeMillis();
-        System.out.println("*** ParseRoomPageTask parseAndStoreMetric parse xml more: " + (step2-step1));
-
         Long anchorId = getAnchorIdOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
-        long step3 = System.currentTimeMillis();
-        System.out.println("*** ParseRoomPageTask parseAndStoreMetric getAnchorOrNew: " + (step3-step2));
-        
+      
         for (Metric metric : metrics) {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchorId,
                     metric.type, pageDate)) {
@@ -133,40 +123,25 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                 needCommit = true;
             }
         }
-        long step4 = System.currentTimeMillis();
-        System.out.println("*** ParseRoomPageTask parseAndStoreMetric saveMetricIfNeeded: " + (step4-step3));
 
         for (Pay pay : pays.values()) {
-            long step11 = System.currentTimeMillis();
             Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
-            long step12 = System.currentTimeMillis();
-            System.out.println("* ParseRoomPageTask parseAndStoreMetric search audience one: " + (step12 - step11));
             if (pay.money != null) {
                 storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId,
                         platformId, pay.money, pageDate);
-                long step13 = System.currentTimeMillis();
-                System.out.println("* ParseRoomPageTask parseAndStoreMetric storePayPeriodAndPayMinute one: " + (step13 - step12));
             }
         }
-        long step5 = System.currentTimeMillis();
-        System.out.println("*** ParseRoomPageTask parseAndStoreMetric savePayPeriodAndPayByMinutes total: " + (step5-step4));
-
         if (income > 0) {
             storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income,
                     pageDate);
         }
-        long step6 = System.currentTimeMillis();
-        System.out.println("*** ParseRoomPageTask parseAndStoreMetric saveIncome: " + (step6-step5));
-        
+   
         if(needCommit) {
             resourceManager.commit();
         } else {
             System.out.println("old page, ignore commit");
         }
-        
-        long step7 = System.currentTimeMillis();
-        System.out.println("*** ParseRoomPageTask parseAndStoreMetric commit: " + (step7-step6));
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
@@ -231,40 +206,30 @@ public class ParseRoomPageTask extends BaseParsePageTask {
     private Date getQixiuPayAggregateDate(Date ts) {
         return GeneralHelper.getAggregateDate(ts, TimeUnit.WEEK);
     }
-
+    
     public Long getAudienceIdOrNewOrUpdate(ResourceManager rm, int platformId,
             String audienceName, Long audienceAliasId) {
         DatabaseCache dbCache = rm.getDatabaseCache();
-        Long audienceIdInCache = dbCache.getIdFromAudienceAliasIdOrAudienceName(platformId,
-                audienceAliasId, audienceName);
-        if (audienceIdInCache != null) {
-            return audienceIdInCache;
-        }
-
-        Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceAliasId, audienceName);
-        if (oldAudience == null) {
+        Long oldAudienceIdFromAliasId = dbCache.getIdFromAudienceAliasId(platformId, audienceAliasId);
+        if(oldAudienceIdFromAliasId == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
             needCommit = true;
             rm.getDatabaseCache().setAudienceMapper(audienceAliasId, audienceName, newAudience.getAudienceId());
-            return newAudience.getAudienceId();
-        } else if (audienceName != null && 
-                (oldAudience.getAudienceName() == null || !audienceName.equals(oldAudience.getAudienceName()))) {
+            oldAudienceIdFromAliasId = newAudience.getAudienceId();
+        }
+        
+        
+        Long oldAudienceIdFromName = dbCache.getIdFromAudienceName(platformId, audienceName);
+        if(oldAudienceIdFromName == null) {
+            Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceAliasId, null);
             oldAudience.setAudienceName(audienceName);
+            oldAudience.setLastUpdated(new Date());
             rm.getDatabaseSession().update(oldAudience);
             needCommit = true;
             rm.getDatabaseCache().setAudienceMapper(null, audienceName, oldAudience.getAudienceId());
-            return oldAudience.getAudienceId();
-        } else if(audienceAliasId != null &&
-                (oldAudience.getAudienceAliasId() == null || !audienceAliasId.equals(oldAudience.getAudienceAliasId()))){
-            oldAudience.setAudienceAliasId(audienceAliasId);
-            rm.getDatabaseSession().update(oldAudience);
-            needCommit = true;
-            rm.getDatabaseCache().setAudienceMapper(audienceAliasId, null, oldAudience.getAudienceId());
-            return oldAudience.getAudienceId();
-        } else {
-            return oldAudience.getAudienceId();
         }
+        return oldAudienceIdFromAliasId;
     }
 
     public Long getAnchorIdOrNew(ResourceManager rm, Integer platformId, Long anchorAliasId,

@@ -9,7 +9,7 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "1004_Anchor", indexes = {
+@Table(name = "1005_Anchor", indexes = {
         @Index(columnList = "platform_id,anchor_id", name = "anchor_simple_index")
 })
 public class Anchor {

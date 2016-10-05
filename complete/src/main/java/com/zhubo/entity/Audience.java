@@ -9,7 +9,7 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "1004_Audience", indexes = {
+@Table(name = "1005_Audience", indexes = {
         @Index(columnList = "platform_id,audience_id", name = "audience_simple_index")
 })
 public class Audience {
@@ -75,6 +75,10 @@ public class Audience {
     
     public void setAudienceName(String audienceName) {
         this.audienceName = audienceName;
+    }
+    
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
     
     public String toString() {
