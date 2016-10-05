@@ -96,12 +96,17 @@ public class ResourceManager {
     }
 
     public Session getDatabaseSession() {
+        long start = System.currentTimeMillis();
         if(session == null) {
             session = sessionFactory.openSession();
         }
+        boolean beginTransaction = false;
         if(transaction == null || transaction.wasCommitted()) {
             transaction = session.beginTransaction();
+            beginTransaction = true;
         }
+        long end = System.currentTimeMillis();
+        System.out.println("getDatabaseSession begin transaction: " + beginTransaction + " :" + (end-start));
         return session;
     }
     

@@ -43,7 +43,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         Document document = null;
         Element root = null;
         Element dataElement = null;
-
+        long start = System.currentTimeMillis();
+        
         try {
             document = builder.build(file);
 
@@ -70,6 +71,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             String dataStr = dataElement.getChild("date").getValue();
             Date pageDate = GeneralHelper.parseWithMultipleFormats(dataStr);
             Element allContItemElement = dataElement.getChild("cont_items");
+            long end = System.currentTimeMillis();
+            System.out.println("ParseRoomPageTask parse xml: " + (end-start));
             parseAndStoreMetric(allContItemElement, pageDate);
             return true;
         } catch (ParseException e) {
@@ -85,6 +88,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         String anchorName = null;
         List<Metric> metrics = Lists.newArrayList();
         Map<String, Pay> pays = Maps.newHashMap();
+        long step1 = System.currentTimeMillis();
         for (Element itemElement : itemElements) {
             if (itemElement.getChild("cont_item_name") != null) {
                 String itemName = itemElement.getChildText("cont_item_name");
@@ -107,9 +111,13 @@ public class ParseRoomPageTask extends BaseParsePageTask {
 
             }
         }
+        long step2 = System.currentTimeMillis();
+        System.out.println("*** ParseRoomPageTask parseAndStoreMetric parse xml more: " + (step2-step1));
 
         Anchor anchor = getAnchorOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
-
+        long step3 = System.currentTimeMillis();
+        System.out.println("*** ParseRoomPageTask parseAndStoreMetric getAnchorOrNew: " + (step3-step2));
+        
         for (Metric metric : metrics) {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchor.getAnchorId(),
                     metric.type, pageDate)) {
@@ -118,21 +126,35 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                 resourceManager.getDatabaseSession().save(metricByMinutes);
             }
         }
+        long step4 = System.currentTimeMillis();
+        System.out.println("*** ParseRoomPageTask parseAndStoreMetric saveMetricIfNeeded: " + (step4-step3));
 
         for (Pay pay : pays.values()) {
+            long step11 = System.currentTimeMillis();
             Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
+            long step12 = System.currentTimeMillis();
+            System.out.println("* ParseRoomPageTask parseAndStoreMetric search audience one: " + (step12 - step11));
             if (pay.money != null) {
                 storePayPeriodAndPayMinute(resourceManager, audienceId, anchor.getAnchorId(),
                         platformId, pay.money, pageDate);
+                long step13 = System.currentTimeMillis();
+                System.out.println("* ParseRoomPageTask parseAndStoreMetric storePayPeriodAndPayMinute one: " + (step13 - step12));
             }
         }
+        long step5 = System.currentTimeMillis();
+        System.out.println("*** ParseRoomPageTask parseAndStoreMetric savePayPeriodAndPayByMinutes total: " + (step5-step4));
 
         if (income > 0) {
             storeAnchorIncomeIfNeeded(resourceManager, anchor.getAnchorId(), platformId, income,
                     pageDate);
         }
+        long step6 = System.currentTimeMillis();
+        System.out.println("*** ParseRoomPageTask parseAndStoreMetric saveIncome: " + (step6-step5));
+        
         resourceManager.commit();
+        long step7 = System.currentTimeMillis();
+        System.out.println("*** ParseRoomPageTask parseAndStoreMetric commit: " + (step7-step6));
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
