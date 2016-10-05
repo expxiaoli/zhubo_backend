@@ -305,6 +305,8 @@ public class DatabaseCache {
             return null;
         } else if (oldPayPeriod.recordEffectiveTime.compareTo(payPeriod.recordEffectiveTime) >= 0)  {
             System.out.println("-_-> is old pay data, ignore get diff money");
+            System.out.println("audienceId:" + audienceId + " anchorId:" + anchorId + 
+                    " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
             return 0;
         }
         else if (oldPayPeriod.money < payPeriod.money) {
