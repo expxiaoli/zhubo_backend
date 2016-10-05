@@ -74,9 +74,12 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             String dataStr = dataElement.getChild("date").getValue();
             Date pageDate = GeneralHelper.parseWithMultipleFormats(dataStr);
             Element allContItemElement = dataElement.getChild("cont_items");
-            long end = System.currentTimeMillis();
-            System.out.println("ParseRoomPageTask parse xml: " + (end-start));
+            long end = System.currentTimeMillis();            
+            System.out.println("*** ParseRoomPageTask parse xml: " + (end-start));
+           
             parseAndStoreMetric(allContItemElement, pageDate);
+            long end2 = System.currentTimeMillis();
+            System.out.println("************** ParseRoomPageTask: " + (end2-start) + "\n\n");
             return true;
         } catch (ParseException e) {
             e.printStackTrace();
