@@ -88,7 +88,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
         Long anchorAliasId = null;
         String anchorName = null;
         List<Metric> metrics = Lists.newArrayList();
-        Map<String, Pay> pays = Maps.newHashMap();
+        Map<Long, Pay> pays = Maps.newHashMap();
         for (Element itemElement : itemElements) {
             if (itemElement.getChild("cont_item_name") != null) {
                 String itemName = itemElement.getChildText("cont_item_name");
@@ -107,8 +107,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                         .getChildText("vipuserid"));
                 Integer money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null
                         : Integer.valueOf(itemElement.getChildText("top_money"));
-                if(audienceName != null && audienceAliasId != null) {
-                    pays.put(audienceName, new Pay(audienceAliasId, audienceName, money));
+                if(audienceName != null && audienceAliasId != null && !pays.containsKey(audienceAliasId)) {
+                    pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
                 }
             }
         }
