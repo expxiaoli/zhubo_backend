@@ -84,6 +84,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
     }
 
     private void parseAndStoreMetric(Element root, Date pageDate) {
+        long step1 = System.currentTimeMillis();
         List<Element> itemElements = root.getChildren();
         Long anchorAliasId = null;
         String anchorName = null;
@@ -112,8 +113,13 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                 }
             }
         }
+        long step2 = System.currentTimeMillis();
+        System.out.println("******* parse xml:" + (step2-step1));
+        
         Long anchorId = getAnchorIdOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
-      
+        long step3 = System.currentTimeMillis();
+        System.out.println("******* get anchor id or new:" + (step3-step2));
+        
         for (Metric metric : metrics) {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchorId,
                     metric.type, pageDate)) {
@@ -123,25 +129,44 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                 needCommit = true;
             }
         }
+        long step4 = System.currentTimeMillis();
+        System.out.println("******* save metric if needed:" + (step4-step3));
 
         for (Pay pay : pays.values()) {
+            long step11 = System.currentTimeMillis();
             Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
+            long step12 = System.currentTimeMillis();
+            System.out.println("**** get audience id or new or update:" + (step12-step11));
             if (pay.money != null) {
                 storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId,
                         platformId, pay.money, pageDate);
+                long step13 = System.currentTimeMillis();
+                System.out.println("**** store pay period and pay minuted if needed:" + (step13-step12));
             }
+            
         }
+        long step5 = System.currentTimeMillis();
+        System.out.println("******* save pay if needed:" + (step5-step4));
+        
         if (income > 0) {
             storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income,
                     pageDate);
         }
+        long step6 = System.currentTimeMillis();
+        System.out.println("******* save income if needed:" + (step6-step5));
+        
    
         if(needCommit) {
             resourceManager.commit();
+            long step7 = System.currentTimeMillis();
+            System.out.println("******* commit:" + (step7-step6));
         } else {
             System.out.println("old page, ignore commit");
         }
+        
+        long step8 = System.currentTimeMillis();
+        System.out.println("*********** all:" + (step8-step1));
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
@@ -209,6 +234,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
     
     public Long getAudienceIdOrNewOrUpdate(ResourceManager rm, int platformId,
             String audienceName, Long audienceAliasId) {
+        long step1 = System.currentTimeMillis();
         DatabaseCache dbCache = rm.getDatabaseCache();
         Long oldAudienceIdFromAliasId = dbCache.getIdFromAudienceAliasId(platformId, audienceAliasId);
         if(oldAudienceIdFromAliasId == null) {
@@ -218,7 +244,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             rm.getDatabaseCache().setAudienceMapper(audienceAliasId, audienceName, newAudience.getAudienceId());
             oldAudienceIdFromAliasId = newAudience.getAudienceId();
         }
-        
+        long step2 = System.currentTimeMillis();
+        System.out.println("** add audience to db if needed: " + (step2-step1));
         
         Long oldAudienceIdFromName = dbCache.getIdFromAudienceName(platformId, audienceName);
         if(oldAudienceIdFromName == null) {
@@ -229,6 +256,9 @@ public class ParseRoomPageTask extends BaseParsePageTask {
             needCommit = true;
             rm.getDatabaseCache().setAudienceMapper(null, audienceName, oldAudience.getAudienceId());
         }
+        long step3 = System.currentTimeMillis();
+        System.out.println("** update audience name in db if needed: " + (step3-step2));
+        
         return oldAudienceIdFromAliasId;
     }
 
