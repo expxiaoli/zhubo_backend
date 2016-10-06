@@ -12,6 +12,7 @@ public class AudienceTotalPayRankChangeResponse {
         private Integer rank1To7Day;
         private Integer rank8To14Day;
         private Integer rank1To30Day;
+        private Integer rankChange;
         
         public Long getAudienceId() {
             return audienceId;
@@ -37,6 +38,10 @@ public class AudienceTotalPayRankChangeResponse {
             return rank1To30Day;
         }
         
+        public Integer getRankChange() {
+            return rankChange;
+        }
+        
         public AudienceTotalPayRankChangeItem(Long audienceId, Long audienceAliasId, String audienceName, Integer rank1To7Day,
                 Integer rank8To14Day, Integer rank1To30Day) {
             this.audienceId = audienceId;
@@ -44,7 +49,12 @@ public class AudienceTotalPayRankChangeResponse {
             this.audienceName = audienceName;
             this.rank1To7Day = rank1To7Day;
             this.rank8To14Day = rank8To14Day;
-            this.rank1To30Day = rank1To30Day;                   
+            this.rank1To30Day = rank1To30Day;
+            if(rank1To7Day != null && rank8To14Day != null) {
+                rankChange = rank1To7Day - rank8To14Day;
+            } else {
+                rankChange = null;
+            }
         }
     }
     

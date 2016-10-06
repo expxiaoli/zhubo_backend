@@ -56,10 +56,10 @@ public class AudienceMetricController {
             Integer money = record.getMoney();
             Integer diffDay = GeneralHelper.getDiffDay(now, ts);
             ///////////
-            if(diffDay <= 57) {
+            if(diffDay <= 18) {
                 addRankValue(pay1To7DayMapper, id, money);
             }
-            if(diffDay > 7 && diffDay <= 14) {
+            if(diffDay > 18 && diffDay <= 30) {
                 addRankValue(pay8To14DayMapper, id, money);
             }
             if(diffDay <= 30) {
