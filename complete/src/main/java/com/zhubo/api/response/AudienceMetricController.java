@@ -3,6 +3,8 @@ package com.zhubo.api.response;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -18,16 +20,132 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zhubo.api.response.AudiencePayDetailResponse.AudiencePayItem;
+import com.zhubo.api.response.AudienceTotalPayRankChangeResponse.AudienceTotalPayRankChangeItem;
 import com.zhubo.entity.Anchor;
+import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByDays;
 import com.zhubo.entity.AudiencePayByMinutes;
+import com.zhubo.entity.AudienceTotalPayByDays;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
+import com.zhubo.helper.ModelHelper;
 
 @RestController
 public class AudienceMetricController {
     private final int maxTopAudience = 7;
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    
+    @RequestMapping("/audience_total_pay_rank_change")
+    public AudienceTotalPayRankChangeResponse getAudienceTotalPayRankChange(@RequestParam(value = "audience_id") Long audienceId,
+            @RequestParam(value = "platform_id") Integer platformId) throws ParseException {
+        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
+        Query query = session
+                .createQuery("from AudienceTotalPayByDays where platform_id = :platform_id "
+                        + "and record_effective_time >= :start_date and record_effective_time < :end_date");
+        query.setParameter("platform_id", platformId);
+        query.setParameter("start_date", GeneralHelper.addDay(new Date(), -31));
+        query.setParameter("end_date", new Date());
+        List<AudienceTotalPayByDays> records = query.list();
+        Map<Long, RankValueItem> pay1To7DayMapper = Maps.newHashMap();
+        Map<Long, RankValueItem> pay8To14DayMapper = Maps.newHashMap();
+        Map<Long, RankValueItem> pay1To30DayMapper = Maps.newHashMap();
+        for(AudienceTotalPayByDays record : records) {
+            Long id = record.getAudienceId();
+            Date ts = record.getRecordEffectiveTime();            
+            Date now = new Date();
+            Integer money = record.getMoney();
+            Integer diffDay = GeneralHelper.getDiffDay(now, ts);
+            ///////////
+            if(diffDay <= 57) {
+                addRankValue(pay1To7DayMapper, id, money);
+            }
+            if(diffDay > 7 && diffDay <= 14) {
+                addRankValue(pay8To14DayMapper, id, money);
+            }
+            if(diffDay <= 30) {
+                addRankValue(pay1To30DayMapper, id, money);
+            }
+        }
+        List<RankValueItem> pay1To7DayPays = new ArrayList(pay1To7DayMapper.values());
+        Collections.sort(pay1To7DayPays, new RankValueItemComparator());
+        
+        List<RankValueItem> pay8To14DayPays = new ArrayList(pay8To14DayMapper.values());
+        Collections.sort(pay8To14DayPays, new RankValueItemComparator());
+        Map<Long, Integer> rank8To14Day = getRankFromSortedItems(pay8To14DayPays);
+        
+        List<RankValueItem> pay1To30DayPays = new ArrayList(pay1To30DayMapper.values());
+        Collections.sort(pay1To30DayPays, new RankValueItemComparator());
+        Map<Long, Integer> rank1To30Day = getRankFromSortedItems(pay1To30DayPays);
+        
+        int baseIndex = 0;
+        while(baseIndex < pay1To7DayPays.size() && baseIndex <= 1000) {
+            if(pay1To7DayPays.get(baseIndex).id == audienceId) {
+                break;
+            }
+            baseIndex++;
+        }
+        
+        List<AudienceTotalPayRankChangeItem> rankChangeItems = Lists.newArrayList();
+        if(baseIndex > 1000) {
+            return new AudienceTotalPayRankChangeResponse(rankChangeItems);
+        } else {
+            int minIndex = Math.max(baseIndex - 3, 0);
+            int maxIndex = Math.min(baseIndex + 3, pay1To7DayPays.size() - 1);
+            for(int tmpIndex = minIndex ; tmpIndex <= maxIndex; tmpIndex++) {
+                Long tmpId = pay1To7DayPays.get(tmpIndex).id;
+                Audience audience = ModelHelper.getAudience(ResourceManager.generateResourceManager(), tmpId);
+                
+                
+                rankChangeItems.add(new AudienceTotalPayRankChangeItem(
+                        tmpId, audience.getAudienceAliasId(), audience.getAudienceName(),
+                        tmpIndex, rank8To14Day.get(tmpId), rank1To30Day.get(tmpId))
+                );
+            }
+            
+            return new AudienceTotalPayRankChangeResponse(rankChangeItems);
+        }
+    }
+    
+    private Map<Long, Integer> getRankFromSortedItems(List<RankValueItem> items) {
+        Map<Long, Integer> maps = Maps.newHashMap();
+        int index = 0;
+        while(index < items.size()) {
+            maps.put(items.get(index).id, index);
+            index++;
+        }
+        return maps;
+    }
+    
+    public static class RankValueItem {
+        public Long id;
+        public Integer value;
+        
+        public RankValueItem(Long id, Integer value) {
+            this.id = id;
+            this.value = value;
+        }
+    }
+    
+    public class RankValueItemComparator implements Comparator {
+
+        @Override
+        public int compare(Object o1, Object o2) {
+            RankValueItem i1 = (RankValueItem)o1;
+            RankValueItem i2 = (RankValueItem)o2;
+            return i2.value - i1.value;
+        }
+        
+    }
+    
+    public static void addRankValue(Map<Long, RankValueItem> pays, Long id, Integer value) {
+        RankValueItem item = pays.get(id);
+        if(item == null) {
+            pays.put(id, new RankValueItem(id, 0));
+            item = pays.get(id);
+        }
+        item.value = item.value + value;
+    }
+    
     
     @RequestMapping("/audience_total_pay_minute")
     public AudienceTotalPayResponse getAudienceTotalPayMinute(@RequestParam(value = "audience_id") Long audienceId,

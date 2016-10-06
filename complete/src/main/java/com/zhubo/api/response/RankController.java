@@ -77,6 +77,7 @@ public class RankController {
             finalRankItems.add(item);
             index++;
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AudienceTotalPayRankResponse(finalRankItems);
     }
     
@@ -150,6 +151,7 @@ public class RankController {
             finalRankItems.add(item);
             index++;
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AnchorIncomeRankResponse(finalRankItems);
     }
     

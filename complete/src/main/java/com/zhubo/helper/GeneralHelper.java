@@ -30,6 +30,9 @@ public class GeneralHelper {
         }
     }
     
+    public static Integer getDiffDay(Date date1, Date date2) {
+        return ((Long)((date1.getTime() - date2.getTime()) / (3600 * 1000 * 24))).intValue();
+    }
     
     public static Date parseDateFromFileMiddleName(String fileMiddleName) throws ParseException {
         return sdf.parse(fileMiddleName);

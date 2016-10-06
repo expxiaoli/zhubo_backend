@@ -54,6 +54,7 @@ public class PlatformController {
             Set<Long> anchorIds = anchorIdsByDays.get(ts);
             metricItems.add(new MetricItem(anchorIds.size(), ts));
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new PlatformMetricResponse(metricItems);
     }
     
@@ -86,6 +87,7 @@ public class PlatformController {
             Integer money = incomeByDays.get(ts);
             metricItems.add(new MetricItem(money, ts));
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new PlatformMetricResponse(metricItems);
     }
     
@@ -118,6 +120,7 @@ public class PlatformController {
             Set<Long> audienceIds = audienceIdsByDay.get(ts);
             metricItems.add(new MetricItem(audienceIds.size(), ts));
         }
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new PlatformMetricResponse(metricItems);
     }
 }
