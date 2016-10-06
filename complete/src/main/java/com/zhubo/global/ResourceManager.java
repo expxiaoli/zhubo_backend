@@ -99,8 +99,13 @@ public class ResourceManager {
 
     public Session getDatabaseSession() {
         getSessionCount++;
-        if(session == null || getSessionCount >= 1000) {
-            closeSessionAndTransaction();
+        if(session == null) {
+            session = sessionFactory.openSession();
+        }
+        if(getSessionCount >= 1000) {
+            commit();
+            transaction = null;
+            session.close();
             session = sessionFactory.openSession();
             System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ using this session too long, get new one");
             getSessionCount = 0;
