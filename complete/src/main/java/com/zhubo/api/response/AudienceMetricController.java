@@ -66,6 +66,7 @@ public class AudienceMetricController {
                 addRankValue(pay1To30DayMapper, id, money);
             }
         }
+        
         List<RankValueItem> pay1To7DayPays = new ArrayList(pay1To7DayMapper.values());
         Collections.sort(pay1To7DayPays, new RankValueItemComparator());
         
@@ -79,7 +80,7 @@ public class AudienceMetricController {
         
         int baseIndex = 0;
         while(baseIndex < pay1To7DayPays.size() && baseIndex <= 1000) {
-            if(pay1To7DayPays.get(baseIndex).id == audienceId) {
+            if(pay1To7DayPays.get(baseIndex).id.equals(audienceId)) {
                 break;
             }
             baseIndex++;
