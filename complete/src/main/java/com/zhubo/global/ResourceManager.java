@@ -28,6 +28,7 @@ public class ResourceManager {
             new Platform(2, "来疯")
             );
     private DatabaseCache dbCache;
+    private int getSessionCount;
 
     public static ResourceManager generateResourceManager() {
         ResourceManager tmp = instance;
@@ -84,6 +85,7 @@ public class ResourceManager {
         if(transaction == null) {
             transaction = session.beginTransaction();
         }
+        getSessionCount = 0;
     }
 
     private void initPlatform(ResourceManager rm) {
@@ -96,13 +98,14 @@ public class ResourceManager {
     }
 
     public Session getDatabaseSession() {
-        if(session == null) {
+        getSessionCount++;
+        if(session == null || getSessionCount >= 1000) {
             session = sessionFactory.openSession();
+            System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ using this session too long, get new one");
+            getSessionCount = 0;
         }
-        boolean beginTransaction = false;
         if(transaction == null || transaction.wasCommitted()) {
             transaction = session.beginTransaction();
-            beginTransaction = true;
         }
         return session;
     }
