@@ -88,6 +88,7 @@ public class AudienceMetricController {
         
         List<AudienceTotalPayRankChangeItem> rankChangeItems = Lists.newArrayList();
         if(baseIndex > 1000) {
+            ResourceManager.generateResourceManager().closeSessionAndTransaction();
             return new AudienceTotalPayRankChangeResponse(rankChangeItems);
         } else {
             int minIndex = Math.max(baseIndex - 3, 0);
@@ -102,7 +103,7 @@ public class AudienceMetricController {
                         tmpIndex, rank8To14Day.get(tmpId), rank1To30Day.get(tmpId))
                 );
             }
-            
+            ResourceManager.generateResourceManager().closeSessionAndTransaction();
             return new AudienceTotalPayRankChangeResponse(rankChangeItems);
         }
     }
@@ -251,6 +252,7 @@ public class AudienceMetricController {
                     rateInCurAudience, incomeHistory, latest7DaysSumPay, latest30DaysSumPay));
             count++;
         }         
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AudiencePayDetailResponse(payItems);
     }
     
@@ -315,6 +317,7 @@ public class AudienceMetricController {
                     rateInCurAudience, incomeHistory, latest7DaysSumPay, latest30DaysSumPay));
             count++;
         }         
+        ResourceManager.generateResourceManager().closeSessionAndTransaction();
         return new AudiencePayDetailResponse(payItems);
     }
     
