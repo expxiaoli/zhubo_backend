@@ -28,7 +28,7 @@ import com.zhubo.helper.ModelHelper;
 @RestController
 public class RankController {
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-    private final int rankNumber = 10;    
+    private final int rankNumber = 100;    
     
     @RequestMapping("/audience_total_pay_day_rank")
     public AudienceTotalPayRankResponse getAudienceTotalPayDayRank(@RequestParam(value = "platform_id") int platformId,
@@ -44,7 +44,7 @@ public class RankController {
         query.setParameter("end_date", endDate);
         List<AudienceTotalPayByDays> records = query.list();
         Map<Long, Integer> payMapping = Maps.newHashMap();
-        Integer paySum = 0;
+        Long paySum = 0L;
         for(AudienceTotalPayByDays record : records) {
             Integer oldPay = payMapping.get(record.getAudienceId());
             if(oldPay == null) {
