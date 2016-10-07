@@ -100,7 +100,7 @@ public class RankController {
     }
     
     private List<AudienceTotalPayByDays> getAudienceTotalPaysByDays(Long audienceId, Date start, Date end) {
-        Session session = ResourceManager.generateResourceManager().getNewDatabaseSession();
+        Session session = ResourceManager.generateResourceManager().getDatabaseSession();
         Query query = session
                 .createQuery("from AudienceTotalPayByDays where audience_id = :audience_id "
                         + "and record_effective_time >= :start_date and record_effective_time < :end_date order by record_effective_time asc");
