@@ -3,15 +3,20 @@ package com.zhubo.api.response;
 import java.util.Date;
 
 public class MetricItem {
-    public final int value;
+    public final Long value;
     public final Date ts;
 
     public MetricItem(int value, Date ts) {
-        this.value = value;
+        this.value = Integer.valueOf(value).longValue();
         this.ts = ts;
     }
 
-    public int getValue() {
+    public MetricItem(long value, Date ts) {
+        this.value = value;
+        this.ts = ts;
+    }
+    
+    public long getValue() {
         return value;
     }
 

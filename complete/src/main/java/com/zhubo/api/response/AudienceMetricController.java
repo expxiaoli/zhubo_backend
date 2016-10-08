@@ -56,10 +56,10 @@ public class AudienceMetricController {
             Integer money = record.getMoney();
             Integer diffDay = GeneralHelper.getDiffDay(now, ts);
             ///////////
-            if(diffDay <= 18) {
+            if(diffDay <= 7) {
                 addRankValue(pay1To7DayMapper, id, money);
             }
-            if(diffDay > 18 && diffDay <= 30) {
+            if(diffDay > 7 && diffDay <= 14) {
                 addRankValue(pay8To14DayMapper, id, money);
             }
             if(diffDay <= 30) {
@@ -120,9 +120,9 @@ public class AudienceMetricController {
     
     public static class RankValueItem {
         public Long id;
-        public Integer value;
+        public Long value;
         
-        public RankValueItem(Long id, Integer value) {
+        public RankValueItem(Long id, Long value) {
             this.id = id;
             this.value = value;
         }
@@ -134,7 +134,7 @@ public class AudienceMetricController {
         public int compare(Object o1, Object o2) {
             RankValueItem i1 = (RankValueItem)o1;
             RankValueItem i2 = (RankValueItem)o2;
-            return i2.value - i1.value;
+            return i2.value - i1.value > 0 ? 1 : -1;
         }
         
     }
@@ -142,7 +142,7 @@ public class AudienceMetricController {
     public static void addRankValue(Map<Long, RankValueItem> pays, Long id, Integer value) {
         RankValueItem item = pays.get(id);
         if(item == null) {
-            pays.put(id, new RankValueItem(id, 0));
+            pays.put(id, new RankValueItem(id, 0L));
             item = pays.get(id);
         }
         item.value = item.value + value;
@@ -204,19 +204,19 @@ public class AudienceMetricController {
         query.setParameter("start_date", startDate);
         query.setParameter("end_date", endDate);
         List<AudiencePayByMinutes> records = query.list();
-        Map<Long, Integer> totalIncomeByAnchor = Maps.newHashMap();
-        int totalMoney = 0;
+        Map<Long, Long> totalIncomeByAnchor = Maps.newHashMap();
+        Long totalMoney = 0L;
         Map<Long, List<MetricItem>> incomeItemsByAnchor = Maps.newHashMap();
         for(AudiencePayByMinutes record : records) {
             long anchorId = record.getAnchorId();
             int money = record.getMoney();
             Date ts = record.getRecordEffectiveTime();
-            Integer oldMoney = totalIncomeByAnchor.get(anchorId);
+            Long oldMoney = totalIncomeByAnchor.get(anchorId);
             if(oldMoney == null) {
-                oldMoney = 0;
+                oldMoney = 0L;
                 incomeItemsByAnchor.put(anchorId, Lists.newArrayList());
             }
-            int newMoney = oldMoney + money;
+            Long newMoney = oldMoney + money;
             totalMoney += money;
             totalIncomeByAnchor.put(anchorId, newMoney);
             incomeItemsByAnchor.get(anchorId).add(new MetricItem(money, ts));
@@ -233,7 +233,7 @@ public class AudienceMetricController {
         while(count < maxTopAudience && count < totalIncomes.size()) {
             AnchorIncome anchorIncome = (AnchorIncome) totalIncomes.get(count);
             long anchorId = anchorIncome.anchorId;
-            int income = anchorIncome.money;
+            Long income = anchorIncome.money;
 
             Query anchorQuery = session
                     .createQuery("from Anchor where anchor_id = :anchor_id");
@@ -245,8 +245,8 @@ public class AudienceMetricController {
             List<MetricItem> incomeHistory = incomeItemsByAnchor.get(anchorId);
             
             List<AudiencePayByDays> latestPayByDays = getLatestPayByDays(session, audienceId, anchorId);
-            int latest7DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 7);
-            int latest30DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 30);
+            Long latest7DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 7);
+            Long latest30DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 30);
             
             payItems.add(new AudiencePayItem(anchorId, anchorAliasId, anchorName, income,
                     rateInCurAudience, incomeHistory, latest7DaysSumPay, latest30DaysSumPay));
@@ -269,19 +269,19 @@ public class AudienceMetricController {
         query.setParameter("start_date", startDate);
         query.setParameter("end_date", endDate);
         List<AudiencePayByDays> records = query.list();
-        Map<Long, Integer> totalIncomeByAnchor = Maps.newHashMap();
-        int totalMoney = 0;
+        Map<Long, Long> totalIncomeByAnchor = Maps.newHashMap();
+        Long totalMoney = 0L;
         Map<Long, List<MetricItem>> incomeItemsByAnchor = Maps.newHashMap();
         for(AudiencePayByDays record : records) {
             long anchorId = record.getAnchorId();
             int money = record.getMoney();
             Date ts = record.getRecordEffectiveTime();
-            Integer oldMoney = totalIncomeByAnchor.get(anchorId);
+            Long oldMoney = totalIncomeByAnchor.get(anchorId);
             if(oldMoney == null) {
-                oldMoney = 0;
+                oldMoney = 0L;
                 incomeItemsByAnchor.put(anchorId, Lists.newArrayList());
             }
-            int newMoney = oldMoney + money;
+            Long newMoney = oldMoney + money;
             totalMoney += money;
             totalIncomeByAnchor.put(anchorId, newMoney);
             incomeItemsByAnchor.get(anchorId).add(new MetricItem(money, ts));
@@ -298,7 +298,7 @@ public class AudienceMetricController {
         while(count < maxTopAudience && count < totalIncomes.size()) {
             AnchorIncome anchorIncome = (AnchorIncome) totalIncomes.get(count);
             long anchorId = anchorIncome.anchorId;
-            int income = anchorIncome.money;
+            Long income = anchorIncome.money;
 
             Query anchorQuery = session
                     .createQuery("from Anchor where anchor_id = :anchor_id");
@@ -310,8 +310,8 @@ public class AudienceMetricController {
             List<MetricItem> incomeHistory = incomeItemsByAnchor.get(anchorId);
             
             List<AudiencePayByDays> latestPayByDays = getLatestPayByDays(session, audienceId, anchorId);
-            int latest7DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 7);
-            int latest30DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 30);
+            Long latest7DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 7);
+            Long latest30DaysSumPay = getLatestXDaysTotalPay(latestPayByDays, 30);
             
             payItems.add(new AudiencePayItem(anchorId, anchorAliasId, anchorName, income,
                     rateInCurAudience, incomeHistory, latest7DaysSumPay, latest30DaysSumPay));
@@ -330,10 +330,10 @@ public class AudienceMetricController {
         return latestPayQuery.list();
     }
     
-    private int getLatestXDaysTotalPay(List<AudiencePayByDays> records, int days) {
+    private Long getLatestXDaysTotalPay(List<AudiencePayByDays> records, int days) {
        int fixDays = days + 1;
        Date minTs = GeneralHelper.addDay(new Date(), -fixDays);
-       int sum = 0;
+       Long sum = 0L;
        for(AudiencePayByDays record : records) {
            if(record.getRecordEffectiveTime().compareTo(minTs) > 0) {
                sum += record.getMoney();
@@ -345,9 +345,9 @@ public class AudienceMetricController {
     
     public static class AnchorIncome {
         public long anchorId;
-        public int money;
+        public Long money;
         
-        public AnchorIncome(long anchorId, int money) {
+        public AnchorIncome(long anchorId, Long money) {
             this.anchorId = anchorId;
             this.money = money;
         }
@@ -357,7 +357,7 @@ public class AudienceMetricController {
         public final int compare(Object o1, Object o2) {
             AnchorIncome i1 = (AnchorIncome)o1;
             AnchorIncome i2 = (AnchorIncome)o2;
-            return i2.money - i1.money;
+            return i2.money - i1.money > 0 ? 1 : -1;
         }
     }
 }

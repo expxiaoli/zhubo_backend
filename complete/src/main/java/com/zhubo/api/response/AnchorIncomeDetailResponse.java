@@ -10,15 +10,15 @@ public class AnchorIncomeDetailResponse {
         private final long audienceId;
         private final Long audienceAliasId;
         private final String audienceName;
-        private final int totalPay;
+        private final Long totalPay;
         private final Date lastPayTime;
         private final double rateInCurAudience;
         private final List<MetricItem> payHistory;
-        private final int latest30DaysPay;
-        private final int latest7DaysPay;
+        private final Long latest30DaysPay;
+        private final Long latest7DaysPay;
        
-        public AnchorIncomeItem (long audienceId, Long audienceAliasId, String audienceName, int totalPay, Date lastPayTime, double rateInCurAudience, 
-                List<MetricItem> payHistory, int latest7DaysPay, int latest30daysPay) {
+        public AnchorIncomeItem (long audienceId, Long audienceAliasId, String audienceName, Long totalPay, Date lastPayTime, double rateInCurAudience, 
+                List<MetricItem> payHistory, Long latest7DaysPay, Long latest30daysPay) {
             this.audienceId = audienceId;
             this.audienceAliasId = audienceAliasId;
             this.audienceName = audienceName;
@@ -42,7 +42,7 @@ public class AnchorIncomeDetailResponse {
             return audienceName;
         }
         
-        public int getTotalPay() {
+        public Long getTotalPay() {
             return totalPay;
         }
         
@@ -58,11 +58,11 @@ public class AnchorIncomeDetailResponse {
             return payHistory;
         }
         
-        public int getLatest7DaysPay() {
+        public Long getLatest7DaysPay() {
             return latest7DaysPay;
         }
         
-        public int getLatest30DaysPay() {
+        public Long getLatest30DaysPay() {
             return latest30DaysPay;
         }
         

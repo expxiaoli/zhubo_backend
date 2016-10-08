@@ -71,20 +71,19 @@ public class PlatformController {
         query.setParameter("start_date", startDate);
         query.setParameter("end_date", endDate);
         List<AudienceTotalPayByDays> byDays = query.list();
-        Map<Date, Integer> incomeByDays = Maps.newHashMap();
+        Map<Date, Long> incomeByDays = Maps.newHashMap();
         for(AudienceTotalPayByDays byDay : byDays) {
             Date ts = byDay.getRecordEffectiveTime();
-            int money = byDay.getMoney();
-            Integer oldIncome = incomeByDays.get(ts);
+            Long oldIncome = incomeByDays.get(ts);
             if(oldIncome == null) {
-                oldIncome = 0;
+                oldIncome = 0L;
             }
-            Integer newIncome = oldIncome + byDay.getMoney();
+            Long newIncome = oldIncome + byDay.getMoney();
             incomeByDays.put(ts, newIncome);
         }
         List<MetricItem> metricItems = Lists.newArrayList();
         for(Date ts : incomeByDays.keySet()) {
-            Integer money = incomeByDays.get(ts);
+            Long money = incomeByDays.get(ts);
             metricItems.add(new MetricItem(money, ts));
         }
         ResourceManager.generateResourceManager().closeSessionAndTransaction();
