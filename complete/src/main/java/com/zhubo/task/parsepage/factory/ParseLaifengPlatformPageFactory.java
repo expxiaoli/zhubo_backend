@@ -1,5 +1,10 @@
 package com.zhubo.task.parsepage.factory;
 
+import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.task.parsepage.task.BaseParsePageTask;
 import com.zhubo.task.parsepage.task.ParsePlatformPageTask;
@@ -8,7 +13,7 @@ public class ParseLaifengPlatformPageFactory extends BaseParsePageFactory {
     
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParsePlatformPageTask(filePath, resourceManager, 2);
+        return new ParsePlatformPageTask(filePath, invalidAliasIds, resourceManager, 2);
     }
 
     @Override
@@ -19,6 +24,16 @@ public class ParseLaifengPlatformPageFactory extends BaseParsePageFactory {
     @Override
     public String getTaskName() {
         return "ParsePlatformPageTask";
+    }
+
+    @Override
+    public Set<Integer> getInvalidAliasIds() {
+        return invalidAliasIds;
+    }
+
+    @Override
+    public void loadInvalidIdFilePath(String path) {
+        invalidAliasIds = Sets.newHashSet();
     }
     
    

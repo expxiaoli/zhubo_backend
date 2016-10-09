@@ -24,20 +24,22 @@ public class ParseAndProcessApp {
 
     private ResourceManager rm;
     private String catchupFolderPath;
+    private String invalidIdFilePath;
 
-    public ParseAndProcessApp(String catchupFolderPath) {
+    public ParseAndProcessApp(String catchupFolderPath, String invalidIdFilePath) {
         this.catchupFolderPath = catchupFolderPath;
+        this.invalidIdFilePath = invalidIdFilePath;
         rm = ResourceManager.generateResourceManager();
     }
     
     public void run() throws InstantiationException, IllegalAccessException, IOException, ParseException {
         List<String> sortedFolderNamesToProcess = getSortedFolderNamesToProcess();
         for(String folderName : sortedFolderNamesToProcess) {
-            processDateFolder(folderName);
+            processDateFolder(folderName, invalidIdFilePath);
         }
     }
 
-    public void processDateFolder(String dateFolderName) throws InstantiationException, IllegalAccessException, IOException,
+    public void processDateFolder(String dateFolderName, String invalidIdFilePath) throws InstantiationException, IllegalAccessException, IOException,
             ParseException {
         TaskGroupRun tgr = ModelHelper.markTaskGroupStart(rm, dateFolderName);
 
@@ -47,7 +49,7 @@ public class ParseAndProcessApp {
         System.out.println("begin to parse files in folder: " + dataFolderPath);
         Date startFolderDate = parseFromFolderName(dateFolderName);
         Date endFolderDate = addDay(startFolderDate, 1);
-        parseTask.run(dataFolderPath);
+        parseTask.run(dataFolderPath, invalidIdFilePath);
 
         ProcessAllDataTask processTask = new ProcessAllDataTask();
         processTask.setUpdateTaskRun(true);
@@ -143,10 +145,10 @@ public class ParseAndProcessApp {
             return null;
         }
     }
-/*
+
     public static void main(String[] args) throws InstantiationException, IllegalAccessException,
             IOException, ParseException {
-        new ParseAndProcessApp(args[0]).run();
+        new ParseAndProcessApp(args[0], args[1]).run();
     }
-*/
+
 }

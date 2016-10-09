@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jdom.Document;
 import org.jdom.Element;
@@ -35,8 +36,8 @@ public class ParseRoomPageTask extends BaseParsePageTask {
     private Integer income;
     private boolean needCommit;
 
-    public ParseRoomPageTask(String filePath, ResourceManager resourceManager, int platformId) {
-        super(filePath, resourceManager, platformId);
+    public ParseRoomPageTask(String filePath, Set<Integer> invalidAliasIds, ResourceManager resourceManager, int platformId) {
+        super(filePath, invalidAliasIds, resourceManager, platformId);
         income = 0;
         needCommit = false;
     }
@@ -111,6 +112,10 @@ public class ParseRoomPageTask extends BaseParsePageTask {
                     pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
                 }
             }
+        }
+        if(invalidAliasIds.contains(anchorAliasId)) {
+            System.out.println("-_-> invalid alias id " + anchorAliasId + ", ignore this page");
+            return;
         }
         Long anchorId = getAnchorIdOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
       

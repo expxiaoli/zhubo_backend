@@ -61,7 +61,7 @@ public class ParseAllPageTask {
     }
 
     @SuppressWarnings("unchecked")
-    public void run(String folderPath) throws InstantiationException, IllegalAccessException,
+    public void run(String folderPath, String invalidIdFilePath) throws InstantiationException, IllegalAccessException,
             IOException, ParseException {
 
         ResourceManager rm = ResourceManager.generateResourceManager();
@@ -84,8 +84,8 @@ public class ParseAllPageTask {
 
         for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchParsePageCache(platformId);
-            parseFiles(folderPath, files, platformId, parsePlatformPageFactoryClasses.get(platformId), rm);
-            parseFiles(folderPath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
+            parseFiles(folderPath, invalidIdFilePath, files, platformId, parsePlatformPageFactoryClasses.get(platformId), rm);
+            parseFiles(folderPath, invalidIdFilePath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
             rm.clearParsePageCache();
         }
 
@@ -99,7 +99,7 @@ public class ParseAllPageTask {
         }
     }
 
-    private void parseFiles(String folderPath, List<File> files, Integer platformId, Class factoryClass, ResourceManager rm)
+    private void parseFiles(String folderPath, String invalidIdFilePath, List<File> files, Integer platformId, Class factoryClass, ResourceManager rm)
             throws IOException, InstantiationException, IllegalAccessException, ParseException {
         BaseParsePageFactory factory;
         BaseParsePageTask task;
@@ -108,6 +108,7 @@ public class ParseAllPageTask {
         if(updateTaskRun) {
             taskRun = ModelHelper.markParsePageTaskStart(rm, factory.getTaskName(), platformId, folderPath);
         }
+        factory.loadInvalidIdFilePath(invalidIdFilePath);
         for (File file : files) {
             boolean result = false;
             String fileName = file.getName();

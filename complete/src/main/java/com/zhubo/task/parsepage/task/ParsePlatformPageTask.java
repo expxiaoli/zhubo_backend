@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.jdom.Document;
 import org.jdom.Element;
@@ -20,8 +21,8 @@ import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 
 public class ParsePlatformPageTask extends BaseParsePageTask {
-    public ParsePlatformPageTask(String filePath, ResourceManager resourceManager, int platformId) {
-        super(filePath, resourceManager, platformId);
+    public ParsePlatformPageTask(String filePath, Set<Integer> invalidAliasIds, ResourceManager resourceManager, int platformId) {
+        super(filePath, invalidAliasIds, resourceManager, platformId);
     }
 
     public boolean run() throws JDOMException, IOException, PageFormatException, ParseException {
@@ -64,6 +65,10 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
         List<Element> itemElements = root.getChildren();
         for (Element itemElement : itemElements) {
             Long roomNumber = Long.valueOf(itemElement.getChildText("room_number"));
+            if(invalidAliasIds.contains(roomNumber)) {
+                System.out.println("-_-> invalid alias id " + roomNumber + ", ignore this page");
+                continue;
+            }
             String nickName = itemElement.getChildText("nickname");
             String area = itemElement.getChildText("area");
             AnchorObject anchorInCache = resourceManager.getDatabaseCache()
