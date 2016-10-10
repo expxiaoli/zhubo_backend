@@ -10,15 +10,13 @@ import com.zhubo.task.parsepage.task.BaseParsePageTask;
 
 public abstract class BaseParsePageFactory {
 
-    protected Set<Integer> invalidAliasIds;
+    protected Set<Long> invalidAliasIds;
     
     public abstract BaseParsePageTask create(String filePath, ResourceManager resourceManager);
 
     public abstract String getFilePrefix();
     
     public abstract String getTaskName();
-    
-    public abstract Set<Integer> getInvalidAliasIds();
     
     public abstract void loadInvalidIdFilePath(String path) throws FileNotFoundException, NumberFormatException, IOException;
 }

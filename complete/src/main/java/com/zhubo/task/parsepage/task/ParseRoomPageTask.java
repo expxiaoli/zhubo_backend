@@ -36,7 +36,7 @@ public class ParseRoomPageTask extends BaseParsePageTask {
     private Integer income;
     private boolean needCommit;
 
-    public ParseRoomPageTask(String filePath, Set<Integer> invalidAliasIds, ResourceManager resourceManager, int platformId) {
+    public ParseRoomPageTask(String filePath, Set<Long> invalidAliasIds, ResourceManager resourceManager, int platformId) {
         super(filePath, invalidAliasIds, resourceManager, platformId);
         income = 0;
         needCommit = false;

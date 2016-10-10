@@ -14,9 +14,9 @@ public abstract class BaseParsePageTask {
     protected final File file;
     protected final int platformId;
     protected final ResourceManager resourceManager;
-    protected final Set<Integer> invalidAliasIds;
+    protected final Set<Long> invalidAliasIds;
     
-    public BaseParsePageTask(String filePath, Set<Integer> invalidAliasIds, ResourceManager resourceManager, int platformId) {
+    public BaseParsePageTask(String filePath, Set<Long> invalidAliasIds, ResourceManager resourceManager, int platformId) {
         file = new File(filePath);
         this.invalidAliasIds = invalidAliasIds;
         this.resourceManager = resourceManager;

@@ -21,7 +21,7 @@ import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 
 public class ParsePlatformPageTask extends BaseParsePageTask {
-    public ParsePlatformPageTask(String filePath, Set<Integer> invalidAliasIds, ResourceManager resourceManager, int platformId) {
+    public ParsePlatformPageTask(String filePath, Set<Long> invalidAliasIds, ResourceManager resourceManager, int platformId) {
         super(filePath, invalidAliasIds, resourceManager, platformId);
     }
 

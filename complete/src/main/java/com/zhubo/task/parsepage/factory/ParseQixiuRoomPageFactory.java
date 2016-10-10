@@ -32,11 +32,6 @@ public class ParseQixiuRoomPageFactory extends BaseParsePageFactory {
     }
 
     @Override
-    public Set<Integer> getInvalidAliasIds() {
-        return invalidAliasIds;
-    }
-
-    @Override
     public void loadInvalidIdFilePath(String path) throws NumberFormatException, IOException {
         invalidAliasIds = Sets.newHashSet();
         File file = new File(path);
@@ -45,7 +40,7 @@ public class ParseQixiuRoomPageFactory extends BaseParsePageFactory {
      
         String line = null;
         while ((line = br.readLine()) != null) {
-            Integer id = Integer.valueOf(line);
+            Long id = Long.valueOf(line);
             invalidAliasIds.add(id);
         }     
         br.close();

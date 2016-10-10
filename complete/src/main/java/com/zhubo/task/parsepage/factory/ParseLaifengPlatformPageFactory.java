@@ -27,11 +27,6 @@ public class ParseLaifengPlatformPageFactory extends BaseParsePageFactory {
     }
 
     @Override
-    public Set<Integer> getInvalidAliasIds() {
-        return invalidAliasIds;
-    }
-
-    @Override
     public void loadInvalidIdFilePath(String path) {
         invalidAliasIds = Sets.newHashSet();
     }
