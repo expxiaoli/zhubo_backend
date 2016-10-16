@@ -7,13 +7,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.task.parsepage.task.BaseParsePageTask;
-import com.zhubo.task.parsepage.task.ParseRoomPageTask;
+import com.zhubo.task.parsepage.task.ParseRoomPageWithRoundIdentifyTask;
 
 public class ParseLaifengRoomPageFactory extends BaseParsePageFactory {
     
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParseRoomPageTask(filePath, invalidAliasIds, resourceManager, 2);
+        return new ParseRoomPageWithRoundIdentifyTask(filePath, invalidAliasIds, resourceManager, 2);
     }
 
     @Override

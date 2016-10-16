@@ -18,9 +18,10 @@ public class GeneralHelper {
         case DAY:
             return new Date(date.getYear(), date.getMonth(), date.getDate());
         case WEEK:
-            int dayOfWeek = date.getDay();
+            int dayOfWeek = (date.getDay() + 6) % 7;
             Calendar cal = Calendar.getInstance();
             cal.set(date.getYear() + 1900, date.getMonth(), date.getDate(), 0, 0, 0);
+            cal.set(Calendar.MILLISECOND, 0);
             cal.add(Calendar.DATE, -dayOfWeek);
             return cal.getTime();
         case MONTH:

@@ -15,6 +15,7 @@ import com.zhubo.entity.AnchorIncomeByDays;
 import com.zhubo.entity.AnchorIncomeByMinutes;
 import com.zhubo.entity.AnchorMetricByDays;
 import com.zhubo.entity.AnchorMetricByMinutes;
+import com.zhubo.entity.AnchorRoundIncomeByMinutes;
 import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByDays;
 import com.zhubo.entity.AudiencePayByMinutes;
@@ -35,6 +36,9 @@ public class DatabaseCache {
     private Map<Long, Map<Long, PayPeriodObject>> latestPayPeriodMapper;
     private Map<Long, Map<Long, Set<Date>>> payPeriodDatesMapper;
     private Map<Long, Set<Date>> anchorIncomeByMinutesMapper;
+    private Map<Long, Set<Date>> roundIncomeDatesMapper;
+    private Map<Long, Integer> latestRoundIncomeMapper;
+    private Map<Long, Date> latestRoundStartMapper;
     
     private Map<Long, Map<String, Set<Date>>> metricByDaysDatesMapper;
     private Map<Long, Map<Long, Set<Date>>> audiencePayByDaysDatesMapper;
@@ -80,6 +84,8 @@ public class DatabaseCache {
         batchLoadLatestPayPeriod(platformId);
         batchLoadPayPeriodDates(platformId);
         batchLoadAnchorIncomeByMinutes(platformId);
+        batchLoadRoundIncomeDates(platformId);
+        batchLoadLatestRoundIncome(platformId);
     }
     
     public void batchLoadProcessData(int platformId) {
@@ -97,6 +103,8 @@ public class DatabaseCache {
         clearLatestPayPeriod();
         clearPayPeriodDates();
         clearAnchorIncomeByMinutes();
+        clearRoundIncomeDates();
+        clearLatestRoundIncome();
     }
     
     public void clearProcessData() {
@@ -309,15 +317,43 @@ public class DatabaseCache {
                     " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
             return 0;
         }
-        else if (oldPayPeriod.money < payPeriod.money) {
+        else if (oldPayPeriod.periodStart.compareTo(payPeriod.periodStart) == 0) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
             int diffMoney = payPeriod.money - oldPayPeriod.money;
             return diffMoney;
-        } else if (oldPayPeriod.money > payPeriod.money) {
+        } else if (oldPayPeriod.periodStart.compareTo(payPeriod.periodStart) < 0) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
             return payPeriod.money;
         } else {
+            System.out.println("-_-> is invalid pay period data");
+            System.out.println("audienceId:" + audienceId + " anchorId:" + anchorId + 
+                    " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
+            
             return 0;
+        }
+    }
+    
+    public Integer getDiffMoneyAndUpdateLatestPayPeriodInCache(long audienceId, long anchorId, boolean isOldRound, Date latestRoundStart, PayPeriodObject payPeriod) {
+        PayPeriodObject oldPayPeriod = getPayPeriodFromCache(latestPayPeriodMapper, audienceId, anchorId);
+        if(oldPayPeriod == null) {
+            putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+            return null;
+        } else if (oldPayPeriod.recordEffectiveTime.compareTo(payPeriod.recordEffectiveTime) >= 0)  {
+            System.out.println("-_-> is old pay data, ignore get diff money");
+            System.out.println("audienceId:" + audienceId + " anchorId:" + anchorId + 
+                    " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
+            return 0;
+        } else if (isOldRound && oldPayPeriod.recordEffectiveTime.compareTo(latestRoundStart) >= 0) {
+            if(payPeriod.money > oldPayPeriod.money) {
+                putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+                int diffMoney = payPeriod.money - oldPayPeriod.money;
+                return diffMoney;
+            } else {
+                return 0;
+            }
+        } else {
+            putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+            return payPeriod.money;
         }
     }
     
@@ -604,5 +640,88 @@ public class DatabaseCache {
     public boolean existInAudienceTotalPayByDays(long audienceId, Date ts) {
         Set<Date> dates = audienceTotalPayByDaysDatesMapper.get(audienceId);
         return dates != null && dates.contains(ts);
+    }
+    
+    private void batchLoadRoundIncomeDates(int platformId) {
+        roundIncomeDatesMapper = Maps.newHashMap();
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AnchorRoundIncomeByMinutes where platform_id = :platform_id and record_effective_time >= :min_ts and record_effective_time <= :max_ts");
+        query.setParameter("min_ts", minTs);
+        query.setParameter("max_ts", maxTs);
+        query.setParameter("platform_id", platformId);
+        List<AnchorRoundIncomeByMinutes> records = query.list();
+        for(AnchorRoundIncomeByMinutes record : records) {
+            Long anchorId = record.getAnchorId();
+            Set<Date> dates = roundIncomeDatesMapper.get(anchorId);
+            if(dates == null) {
+                roundIncomeDatesMapper.put(anchorId, Sets.newHashSet());
+                dates = roundIncomeDatesMapper.get(anchorId);
+            }
+            Date date = record.getRecordEffectiveTime();
+            dates.add(date);
+        }
+        System.out.println("batchLoadRoundIncomeDates done");
+    }
+    
+    
+    public boolean existInRoundIncomeDates(long anchorId, Date ts) {
+        Set<Date> dates = roundIncomeDatesMapper.get(anchorId);
+        if(dates == null) {
+            return false;
+        } else {
+            return dates.contains(ts);
+        }
+    }
+    
+    public void setRoundIncomeDate(long anchorId, Date ts) {
+        Set<Date> dates = roundIncomeDatesMapper.get(anchorId);
+        if(dates == null) {
+            roundIncomeDatesMapper.put(anchorId, Sets.newHashSet());
+            dates = roundIncomeDatesMapper.get(anchorId);
+        }
+        dates.add(ts);
+    }
+    
+    private void clearRoundIncomeDates() {
+        roundIncomeDatesMapper.clear();
+    }
+    
+    private void batchLoadLatestRoundIncome(int platformId) {
+        latestRoundIncomeMapper = Maps.newHashMap();
+        latestRoundStartMapper = Maps.newHashMap();
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AnchorRoundIncomeByMinutes where platform_id = :platform_id and record_effective_time < :min_ts order by record_effective_time asc");
+        query.setParameter("min_ts", minTs);
+        query.setParameter("platform_id", platformId);
+        List<AnchorRoundIncomeByMinutes> records = query.list();
+        for(AnchorRoundIncomeByMinutes record : records) {
+            Integer oldRoundIncome = latestRoundIncomeMapper.get(record.getAnchorId());
+            if(oldRoundIncome == null || oldRoundIncome > record.getMoney()) {
+                latestRoundStartMapper.put(record.getAnchorId(), record.getRecordEffectiveTime());
+            }
+            latestRoundIncomeMapper.put(record.getAnchorId(), record.getMoney());
+        }
+        System.out.println("batchLoadLatestRoundIncome done");
+    }
+    
+    public Integer getLatestRoundIncome(long anchorId) {
+        return latestRoundIncomeMapper.get(anchorId);
+    }
+    
+    public Date getLatestRoundStart(long anchorId) {
+        return latestRoundStartMapper.get(anchorId);
+    }
+    
+    public void setLatestRoundIncome(long anchorId, Integer money) {
+        latestRoundIncomeMapper.put(anchorId, money);
+    }
+    
+    public void setLatestRoundStart(long anchorId, Date ts) {
+        latestRoundStartMapper.put(anchorId, ts);
+    }
+    
+    private void clearLatestRoundIncome() {
+        latestRoundIncomeMapper.clear();
+        latestRoundStartMapper.clear();
     }
 }

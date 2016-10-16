@@ -18,7 +18,6 @@ import com.zhubo.entity.TaskGroupRun;
 import com.zhubo.entity.TaskRun;
 import com.zhubo.global.DatabaseCache.PayPeriodObject;
 import com.zhubo.global.ResourceManager;
-import com.zhubo.task.parsepage.task.ParseRoomPageTask.Pay;
 
 public class ModelHelper {
     

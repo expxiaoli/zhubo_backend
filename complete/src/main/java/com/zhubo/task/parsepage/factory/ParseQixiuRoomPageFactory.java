@@ -12,13 +12,13 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.task.parsepage.task.BaseParsePageTask;
-import com.zhubo.task.parsepage.task.ParseRoomPageTask;
+import com.zhubo.task.parsepage.task.ParseRoomPageWithWeekIdentifyTask;
 
 public class ParseQixiuRoomPageFactory extends BaseParsePageFactory {
     
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParseRoomPageTask(filePath, invalidAliasIds, resourceManager, 1);
+        return new ParseRoomPageWithWeekIdentifyTask(filePath, invalidAliasIds, resourceManager, 1);
     }
     
     @Override

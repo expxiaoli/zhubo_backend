@@ -32,11 +32,11 @@ import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 import com.zhubo.task.processdata.TimeUnit;
 
-public class ParseRoomPageTask extends BaseParsePageTask {
+public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
     private Integer income;
     private boolean needCommit;
 
-    public ParseRoomPageTask(String filePath, Set<Long> invalidAliasIds, ResourceManager resourceManager, int platformId) {
+    public ParseRoomPageWithWeekIdentifyTask(String filePath, Set<Long> invalidAliasIds, ResourceManager resourceManager, int platformId) {
         super(filePath, invalidAliasIds, resourceManager, platformId);
         income = 0;
         needCommit = false;
