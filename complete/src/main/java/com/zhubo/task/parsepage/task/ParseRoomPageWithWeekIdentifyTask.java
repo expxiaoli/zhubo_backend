@@ -157,6 +157,9 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
     private String getPayInvalidMessage(ResourceManager rm, long anchorId, Map<Long, Pay> pays, Date pageDate) {
         Date periodStart = getQixiuPayAggregateDate(pageDate); 
         for(Pay pay : pays.values()) {
+            if(pay.money == null) {
+                continue;
+            }
             Long audienceId = rm.getDatabaseCache().getIdFromAudienceAliasId(platformId, pay.audienceAliasId);
             if(audienceId == null) {
                 continue;
