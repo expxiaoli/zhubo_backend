@@ -366,6 +366,9 @@ public class DatabaseCache {
         audiencePays.put(anchorId, payPeriod);
     }
     
+    public PayPeriodObject getLatestPayPeriodFromCache(long audienceId, long anchorId) {
+        return getPayPeriodFromCache(latestPayPeriodMapper, audienceId, anchorId);
+    }
     
     private PayPeriodObject getPayPeriodFromCache(Map<Long, Map<Long, PayPeriodObject>> payCache, long audienceId, long anchorId) {
         if(payCache.containsKey(audienceId)) {
@@ -380,46 +383,6 @@ public class DatabaseCache {
         }
         
     } 
-    
-    private void batchSaveLatestPayPeriod(int platformId) {
-        int audienceCount = 0;
-        for(Long audienceId : latestPayPeriodMapper.keySet()) {
-            Map<Long, PayPeriodObject> audienceCache = latestPayPeriodMapper.get(audienceId);
-            for(Long anchorId : audienceCache.keySet()) {
-                PayPeriodObject payPeriod = audienceCache.get(anchorId);
-                AudiencePayPeriod oldRecord = getLatestPayPeriod(rm, audienceId, anchorId);
-                if(oldRecord == null) {
-                    AudiencePayPeriod record = new AudiencePayPeriod(audienceId, anchorId, payPeriod.platformId, payPeriod.money, 
-                            payPeriod.recordEffectiveTime, payPeriod.periodStart);
-                    rm.getDatabaseSession().save(record);                    
-                } else {
-                    oldRecord.setPlatformId(platformId);
-                    oldRecord.setMoney(payPeriod.money);
-                    oldRecord.setPeriodStart(payPeriod.periodStart);
-                    oldRecord.setRecordEffectiveDate(payPeriod.recordEffectiveTime);
-                    rm.getDatabaseSession().update(oldRecord); 
-                }
-            }
-            audienceCount++;
-            if(audienceCount % 100 == 0) {
-                System.out.println(System.currentTimeMillis() + " save audience pay period:" + audienceCount);
-            }
-        }
-        rm.commit();
-    }    
-    
-    private AudiencePayPeriod getLatestPayPeriod(ResourceManager rm, long audienceId, long anchorId) {
-        Session session = rm.getDatabaseSession();
-        Query query = session.createQuery("from AudiencePayPeriod where anchor_id = :anchor_id and audience_id = :audience_id order by record_effective_time desc");
-        query.setParameter("anchor_id", anchorId);
-        query.setParameter("audience_id", audienceId);
-        List<AudiencePayPeriod> pays = query.list();
-        if(pays.isEmpty()) {
-            return null;
-        } else {
-            return pays.get(0);
-        }  
-    }
     
     public AnchorObject getAnchorObjectFromCache(Long anchorAliasId) {
         return anchorMapper.get(anchorAliasId);

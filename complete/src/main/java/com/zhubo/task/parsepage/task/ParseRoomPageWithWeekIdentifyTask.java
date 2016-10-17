@@ -118,6 +118,11 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
             return;
         }
         Long anchorId = getAnchorIdOrNew(resourceManager, platformId, anchorAliasId, anchorName, pageDate);
+        String payInvalidMessage = getPayInvalidMessage(resourceManager, anchorId, pays, pageDate);
+        if(payInvalidMessage != null) {
+            System.out.println("-_-> invalid pay: " + payInvalidMessage + ", ignore this page");
+            return;
+        }
       
         for (Metric metric : metrics) {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchorId,
@@ -147,6 +152,28 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
         } else {
             System.out.println("old page, ignore commit");
         }
+    }
+    
+    private String getPayInvalidMessage(ResourceManager rm, long anchorId, Map<Long, Pay> pays, Date pageDate) {
+        Date periodStart = getQixiuPayAggregateDate(pageDate); 
+        for(Pay pay : pays.values()) {
+            Long audienceId = rm.getDatabaseCache().getIdFromAudienceAliasId(platformId, pay.audienceAliasId);
+            if(audienceId == null) {
+                continue;
+            }
+            PayPeriodObject oldPayPeriod = rm.getDatabaseCache().getLatestPayPeriodFromCache(audienceId, anchorId);
+            if(oldPayPeriod == null) {
+                continue;
+            }
+            if(periodStart.compareTo(oldPayPeriod.periodStart) == 0) {
+                if(pay.money < oldPayPeriod.money) {
+                    return "anchorId:" + anchorId + " audienceId:" + audienceId
+                            + " oldPayPeriod:" + oldPayPeriod.money + " thisPayPeriod:" + pay.money;
+                }
+            }
+            
+        }
+        return null;
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
