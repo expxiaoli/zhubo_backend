@@ -77,6 +77,9 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
             Date pageDate = GeneralHelper.parseWithMultipleFormats(dataStr);
             Element allContItemElement = dataElement.getChild("cont_items");
 
+            if(allContItemElement == null) {
+                return true;
+            }
             parseAndStoreMetric(allContItemElement, pageDate);
             return true;
         } catch (ParseException e) {
