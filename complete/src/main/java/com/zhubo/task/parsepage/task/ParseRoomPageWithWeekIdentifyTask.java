@@ -113,6 +113,12 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
                 }
             }
         }
+        
+        if(anchorAliasId == null) {
+            System.out.println("-_-> anchor alias id is null, ignore this page");
+            return;
+        }
+        
         if(invalidAliasIds.contains(anchorAliasId)) {
             System.out.println("-_-> invalid alias id " + anchorAliasId + ", ignore this page");
             return;
