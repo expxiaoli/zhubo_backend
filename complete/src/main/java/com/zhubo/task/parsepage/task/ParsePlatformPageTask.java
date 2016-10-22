@@ -13,6 +13,7 @@ import org.jdom.JDOMException;
 import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
 
+import com.google.common.collect.Sets;
 import com.zhubo.entity.Anchor;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.DatabaseCache.AnchorObject;
@@ -21,7 +22,8 @@ import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 
 public class ParsePlatformPageTask extends BaseParsePageTask {
-    public ParsePlatformPageTask(String filePath, Set<Long> invalidAliasIds, ResourceManager resourceManager, int platformId) {
+    public ParsePlatformPageTask(String filePath, Set<Long> invalidAliasIds,
+            ResourceManager resourceManager, int platformId) {
         super(filePath, invalidAliasIds, resourceManager, platformId);
     }
 
@@ -64,8 +66,12 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
     public void parseAndStoreAnchorContent(Element root, String pageType, Date pageDate) {
         List<Element> itemElements = root.getChildren();
         for (Element itemElement : itemElements) {
-            Long roomNumber = Long.valueOf(itemElement.getChildText("room_number"));
-            if(invalidAliasIds.contains(roomNumber)) {
+            String roomNumberText = itemElement.getChildText("room_number");
+            if(roomNumberText == null) {
+                continue;
+            }
+            Long roomNumber = Long.valueOf(roomNumberText);
+            if (invalidAliasIds.contains(roomNumber)) {
                 System.out.println("-_-> invalid alias id " + roomNumber + ", ignore this page");
                 continue;
             }
@@ -91,10 +97,11 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
         }
         resourceManager.commit();
     }
-    /*
-     * public static void main(String[] args) throws JDOMException, IOException,
-     * PageFormatException { ParseQixiuPlatformPageTask task = new
-     * ParseQixiuPlatformPageTask( "sample_data/platform_page",
-     * ResourceManager.generateResourceManager()); task.run(); }
-     */
+/*
+    public static void main(String[] args) throws JDOMException, IOException, PageFormatException, ParseException {
+        ParsePlatformPageTask task = new ParsePlatformPageTask(
+                "/Users/xiao.li/coding/zhubo_data/v6/20161020/平台-奇秀广场-20161020142809-20161020142811790", Sets.newHashSet(), ResourceManager.generateResourceManager(), 1);
+        task.run();
+    }
+*/
 }
