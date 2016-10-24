@@ -37,6 +37,7 @@ public class ParseAndProcessApp {
         for(String folderName : sortedFolderNamesToProcess) {
             processDateFolder(folderName, invalidIdFilePath);
         }
+        System.out.println("ParseAndProcessApp done");
     }
 
     public void processDateFolder(String dateFolderName, String invalidIdFilePath) throws InstantiationException, IllegalAccessException, IOException,

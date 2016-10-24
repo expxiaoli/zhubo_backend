@@ -3,7 +3,7 @@ package com.zhubo.entity;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "1023_Platform")
+@Table(name = "1005_Platform")
 public class Platform {
 	@Id
 	@Column(name = "platform_id")

@@ -32,7 +32,7 @@ public class ParseAllPageTask {
     private Map<Integer, Class> parsePlatformPageFactoryClasses;
     private Map<Integer, Class> parseRoomPageFactoryClasses;
     private Map<Class, List<File>> classToFilesMapping;
-    private int maxPlatformId = 2;
+    private int maxPlatformId;
     private boolean updateTaskRun = false;
 
     public ParseAllPageTask() {
@@ -45,6 +45,8 @@ public class ParseAllPageTask {
         parseRoomPageFactoryClasses.put(1, ParseQixiuRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(3, ParseWoxiuRoomPageFactory.class);
+        
+        maxPlatformId = parsePlatformPageFactoryClasses.keySet().size();
     }
 
     public void setUpdateTaskRun(boolean updateTaskRun) {
@@ -146,7 +148,7 @@ public class ParseAllPageTask {
         List<File> validFiles = Lists.newArrayList();
         for (File file : files) {
             String[] parts = file.getName().split("-");
-            if (parts.length == 4 && parts[2].length() == 14) {
+            if (parts.length == 4 && parts[2].length() == 14 && !file.getName().endsWith("swp")) {
                 validFiles.add(file);
             }
         }
