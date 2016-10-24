@@ -23,6 +23,8 @@ import com.zhubo.task.parsepage.factory.ParseLaifengPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseQixiuPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseQixiuRoomPageFactory;
+import com.zhubo.task.parsepage.factory.ParseWoxiuPlatformPageFactory;
+import com.zhubo.task.parsepage.factory.ParseWoxiuRoomPageFactory;
 import com.zhubo.task.parsepage.task.BaseParsePageTask;
 
 public class ParseAllPageTask {
@@ -37,10 +39,12 @@ public class ParseAllPageTask {
         parsePlatformPageFactoryClasses = Maps.newHashMap();
         parsePlatformPageFactoryClasses.put(1, ParseQixiuPlatformPageFactory.class);
         parsePlatformPageFactoryClasses.put(2, ParseLaifengPlatformPageFactory.class);
+        parsePlatformPageFactoryClasses.put(3, ParseWoxiuPlatformPageFactory.class);
 
         parseRoomPageFactoryClasses = Maps.newHashMap();
         parseRoomPageFactoryClasses.put(1, ParseQixiuRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(3, ParseWoxiuRoomPageFactory.class);
     }
 
     public void setUpdateTaskRun(boolean updateTaskRun) {

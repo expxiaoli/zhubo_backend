@@ -23,7 +23,7 @@ public class ParseLaifengRoomPageFactory extends BaseParsePageFactory {
 
     @Override
     public String getTaskName() {
-        return "ParseRoomPageTask";
+        return "ParseRoomPageWithRoundIdentifyTask";
     }
 
     @Override

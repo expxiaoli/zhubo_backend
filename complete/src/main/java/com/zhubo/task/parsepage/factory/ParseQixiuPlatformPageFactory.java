@@ -12,13 +12,13 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.task.parsepage.task.BaseParsePageTask;
-import com.zhubo.task.parsepage.task.ParsePlatformPageTask;
+import com.zhubo.task.parsepage.task.ParsePlatformPageWithDirectInfoTask;
 
 public class ParseQixiuPlatformPageFactory extends BaseParsePageFactory {
     
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParsePlatformPageTask(filePath, invalidAliasIds, resourceManager, 1);
+        return new ParsePlatformPageWithDirectInfoTask(filePath, invalidAliasIds, resourceManager, 1);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class ParseQixiuPlatformPageFactory extends BaseParsePageFactory {
 
     @Override
     public String getTaskName() {
-        return "ParsePlatformPageTask";
+        return "ParsePlatformPageWithDirectInfoTask";
     }
 
     @Override

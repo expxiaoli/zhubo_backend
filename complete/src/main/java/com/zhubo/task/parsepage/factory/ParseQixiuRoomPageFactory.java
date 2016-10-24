@@ -28,7 +28,7 @@ public class ParseQixiuRoomPageFactory extends BaseParsePageFactory {
 
     @Override
     public String getTaskName() {
-        return "ParseRoomPageTask";
+        return "ParseRoomPageWithWeekIdentifyTask";
     }
 
     @Override

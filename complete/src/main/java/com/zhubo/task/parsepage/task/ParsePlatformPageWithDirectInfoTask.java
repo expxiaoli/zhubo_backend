@@ -21,8 +21,8 @@ import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 
-public class ParsePlatformPageTask extends BaseParsePageTask {
-    public ParsePlatformPageTask(String filePath, Set<Long> invalidAliasIds,
+public class ParsePlatformPageWithDirectInfoTask extends BaseParsePageTask {
+    public ParsePlatformPageWithDirectInfoTask(String filePath, Set<Long> invalidAliasIds,
             ResourceManager resourceManager, int platformId) {
         super(filePath, invalidAliasIds, resourceManager, platformId);
     }
@@ -41,24 +41,24 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
                         Namespace.getNamespace("Spider", "urn:http://service.sina.com.cn/spider"))
                 .getChild("document");
         String pageClass = dataElement.getChild("class").getValue();
-        if (pageClass.equals("奇秀广场")) {
-            if (dataElement.getChild("platform") != null && dataElement.getChild("time") != null
-                    && dataElement.getChild("type") != null) {
-                String pagePlatform = dataElement.getChild("platform").getValue();
-                String pageTime = dataElement.getChild("time").getValue();
-                Date pageDate = GeneralHelper.parseWithMultipleFormats(pageTime);
-                String pageType = dataElement.getChild("type").getValue();
-                Element allContItemElement = dataElement.getChild("cont_items");
-                if (allContItemElement == null) {
-                    throw new PageFormatException("cont_items is not existed");
-                }
-                parseAndStoreAnchorContent(allContItemElement, pageType, pageDate);
-                return true;
-            } else {
-                throw new PageFormatException("platform, time or type element is not existed");
+        if (dataElement.getChild("platform") != null
+                && (dataElement.getChild("time") != null || dataElement.getChild("date") != null)
+                && dataElement.getChild("type") != null) {
+            String pagePlatform = dataElement.getChild("platform").getValue();
+            Element pageTimeElement = dataElement.getChild("time");
+            Element pageDateElement = dataElement.getChild("date");
+            String pageTime = pageTimeElement != null ? pageTimeElement.getValue()
+                    : pageDateElement.getValue();
+            Date pageDate = GeneralHelper.parseWithMultipleFormats(pageTime);
+            String pageType = dataElement.getChild("type").getValue();
+            Element allContItemElement = dataElement.getChild("cont_items");
+            if (allContItemElement == null) {
+                throw new PageFormatException("cont_items is not existed");
             }
+            parseAndStoreAnchorContent(allContItemElement, pageType, pageDate);
+            return true;
         } else {
-            return false;
+            throw new PageFormatException("platform, time or type element is not existed");
         }
 
     }
@@ -67,7 +67,7 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
         List<Element> itemElements = root.getChildren();
         for (Element itemElement : itemElements) {
             String roomNumberText = itemElement.getChildText("room_number");
-            if(roomNumberText == null) {
+            if (roomNumberText == null) {
                 continue;
             }
             Long roomNumber = Long.valueOf(roomNumberText);
@@ -97,11 +97,12 @@ public class ParsePlatformPageTask extends BaseParsePageTask {
         }
         resourceManager.commit();
     }
-/*
-    public static void main(String[] args) throws JDOMException, IOException, PageFormatException, ParseException {
-        ParsePlatformPageTask task = new ParsePlatformPageTask(
-                "/Users/xiao.li/coding/zhubo_data/v6/20161020/平台-奇秀广场-20161020142809-20161020142811790", Sets.newHashSet(), ResourceManager.generateResourceManager(), 1);
-        task.run();
-    }
-*/
+    /*
+     * public static void main(String[] args) throws JDOMException, IOException,
+     * PageFormatException, ParseException { ParsePlatformPageTask task = new
+     * ParsePlatformPageTask(
+     * "/Users/xiao.li/coding/zhubo_data/v6/20161020/平台-奇秀广场-20161020142809-20161020142811790"
+     * , Sets.newHashSet(), ResourceManager.generateResourceManager(), 1);
+     * task.run(); }
+     */
 }
