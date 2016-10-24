@@ -14,6 +14,7 @@ import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
 
 import com.google.common.collect.Sets;
+import com.mysql.jdbc.StringUtils;
 import com.zhubo.entity.Anchor;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.DatabaseCache.AnchorObject;
@@ -67,7 +68,7 @@ public class ParsePlatformPageWithDirectInfoTask extends BaseParsePageTask {
         List<Element> itemElements = root.getChildren();
         for (Element itemElement : itemElements) {
             String roomNumberText = itemElement.getChildText("room_number");
-            if (roomNumberText == null) {
+            if (StringUtils.isNullOrEmpty(roomNumberText)) {
                 continue;
             }
             Long roomNumber = Long.valueOf(roomNumberText);
