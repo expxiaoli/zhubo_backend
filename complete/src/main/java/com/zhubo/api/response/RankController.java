@@ -45,12 +45,17 @@ public class RankController {
         List<AudienceTotalPayByDays> records = query.list();
         Map<Long, Integer> payMapping = Maps.newHashMap();
         Long paySum = 0L;
+        Map<Long, List<AudienceTotalPayByDays>> detailPayMapping = Maps.newHashMap();
         for(AudienceTotalPayByDays record : records) {
             Integer oldPay = payMapping.get(record.getAudienceId());
             if(oldPay == null) {
                 oldPay = 0;
+                detailPayMapping.put(record.getAudienceId(), Lists.newArrayList());
             }
+            List<AudienceTotalPayByDays> detailPays = detailPayMapping.get(record.getAudienceId());
+            detailPays.add(record);
             payMapping.put(record.getAudienceId(), oldPay + record.getMoney());
+            detailPayMapping.put(record.getAudienceId(), detailPays);
             paySum += record.getMoney();
         }
         List<AudienceTotalPayRankItem> rankItems = Lists.newArrayList();
@@ -68,7 +73,7 @@ public class RankController {
             item.setName(audience.getAudienceName());
             item.setRate(1.0 * item.getValue() / paySum);
             
-            List<AudienceTotalPayByDays> byDays = getAudienceTotalPaysByDays(audience.getAudienceId(), startDate, endDate);
+            List<AudienceTotalPayByDays> byDays = detailPayMapping.get(audience.getAudienceId());
             List<MetricItem> payHistory = getPayHistory(byDays);
             Date latestPayDate = getLatestPayDate(byDays);
             item.setPayHistory(payHistory);
