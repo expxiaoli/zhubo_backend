@@ -88,12 +88,16 @@ public class ParsePlatformPageWithDirectInfoTask extends BaseParsePageTask {
                 resourceManager.getDatabaseCache().setAnchorObjectInCache(
                         anchor.getAnchorAliasId(),
                         new AnchorObject(anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
-            } else if (anchorInCache.area == null || anchorInCache.type == null) {
+            } else if (area != null && (anchorInCache.area == null || !area.equals(anchorInCache.area))
+                    || (pageType != null && (anchorInCache.type == null || !pageType.equals(anchorInCache.type)))) {
                 Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class,
                         anchorInCache.anchorId);
                 anchor.setArea(area);
                 anchor.setType(pageType);
                 resourceManager.getDatabaseSession().update(anchor);
+                resourceManager.getDatabaseCache().setAnchorObjectInCache(
+                        anchor.getAnchorAliasId(),
+                        new AnchorObject(anchor.getAnchorId(), area, pageType));
             }
         }
         resourceManager.commit();

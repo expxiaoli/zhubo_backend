@@ -92,11 +92,14 @@ public class ParsePlatformPageWithItemNameTask extends BaseParsePageTask {
             resourceManager.getDatabaseCache().setAnchorObjectInCache(
                     anchor.getAnchorAliasId(),
                     new AnchorObject(anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
-        } else if (anchorInCache.type == null) {
+        } else if (pageType != null && (anchorInCache.type == null || !pageType.equals(anchorInCache.type))) {
             Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class,
                     anchorInCache.anchorId);
             anchor.setType(pageType);
             resourceManager.getDatabaseSession().update(anchor);
+            resourceManager.getDatabaseCache().setAnchorObjectInCache(
+                    anchor.getAnchorAliasId(),
+                    new AnchorObject(anchor.getAnchorId(), anchor.getArea(), pageType));
         }
         resourceManager.commit();
     }
