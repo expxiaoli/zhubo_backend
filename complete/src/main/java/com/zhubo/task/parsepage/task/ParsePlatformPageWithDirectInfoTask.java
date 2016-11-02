@@ -66,6 +66,7 @@ public class ParsePlatformPageWithDirectInfoTask extends BaseParsePageTask {
 
     public void parseAndStoreAnchorContent(Element root, String pageType, Date pageDate) {
         List<Element> itemElements = root.getChildren();
+        boolean needCommit = false;
         for (Element itemElement : itemElements) {
             String roomNumberText = itemElement.getChildText("room_number");
             if (StringUtils.isNullOrEmpty(roomNumberText)) {
@@ -88,6 +89,7 @@ public class ParsePlatformPageWithDirectInfoTask extends BaseParsePageTask {
                 resourceManager.getDatabaseCache().setAnchorObjectInCache(
                         anchor.getAnchorAliasId(),
                         new AnchorObject(anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
+                needCommit = true;
             } else if (area != null && (anchorInCache.area == null || !area.equals(anchorInCache.area))
                     || (pageType != null && (anchorInCache.type == null || !pageType.equals(anchorInCache.type)))) {
                 Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class,
@@ -98,9 +100,12 @@ public class ParsePlatformPageWithDirectInfoTask extends BaseParsePageTask {
                 resourceManager.getDatabaseCache().setAnchorObjectInCache(
                         anchor.getAnchorAliasId(),
                         new AnchorObject(anchor.getAnchorId(), area, pageType));
+                needCommit = true;
             }
         }
-        resourceManager.commit();
+        if(needCommit) {
+            resourceManager.commit();
+        }
     }
     /*
      * public static void main(String[] args) throws JDOMException, IOException,

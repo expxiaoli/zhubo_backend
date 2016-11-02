@@ -84,6 +84,7 @@ public class ParsePlatformPageWithItemNameTask extends BaseParsePageTask {
             return;
         }
         
+        boolean needCommit = false;
         AnchorObject anchorInCache = resourceManager.getDatabaseCache().getAnchorObjectFromCache(roomNumber);
         if (anchorInCache == null) {
             Anchor anchor = new Anchor(platformId, roomNumber, nickName, pageDate);
@@ -92,6 +93,7 @@ public class ParsePlatformPageWithItemNameTask extends BaseParsePageTask {
             resourceManager.getDatabaseCache().setAnchorObjectInCache(
                     anchor.getAnchorAliasId(),
                     new AnchorObject(anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
+            needCommit = true;
         } else if (pageType != null && (anchorInCache.type == null || !pageType.equals(anchorInCache.type))) {
             Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class,
                     anchorInCache.anchorId);
@@ -100,8 +102,11 @@ public class ParsePlatformPageWithItemNameTask extends BaseParsePageTask {
             resourceManager.getDatabaseCache().setAnchorObjectInCache(
                     anchor.getAnchorAliasId(),
                     new AnchorObject(anchor.getAnchorId(), anchor.getArea(), pageType));
+            needCommit = true;
         }
-        resourceManager.commit();
+        if(needCommit) {
+            resourceManager.commit();
+        }
     }
     /*
      * public static void main(String[] args) throws JDOMException, IOException,
