@@ -109,8 +109,8 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
                 Long audienceAliasId = StringUtils.isNullOrEmpty(itemElement
                         .getChildText("vipuserid")) ? null : Long.valueOf(itemElement
                         .getChildText("vipuserid"));
-                Integer money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null
-                        : Integer.valueOf(itemElement.getChildText("top_money"));
+                Long money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null
+                        : Long.valueOf(itemElement.getChildText("top_money"));
                 if(audienceName != null && audienceAliasId != null && !pays.containsKey(audienceAliasId)) {
                     pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
                 }
@@ -189,7 +189,7 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
-            int platformId, int periodMoney, Date ts) {
+            int platformId, long periodMoney, Date ts) {
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
         Integer diffMoney = resourceManager.getDatabaseCache()
@@ -220,7 +220,7 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
     }
 
     private void storePayPeriodIfNeeded(ResourceManager rm, long audienceId, long anchorId,
-            int platformId, int money, Date ts, Date periodStart) {
+            int platformId, long money, Date ts, Date periodStart) {
         if (!rm.getDatabaseCache().existInPayPeriod(audienceId, anchorId, ts)) {
             AudiencePayPeriod payPeriod = new AudiencePayPeriod(audienceId, anchorId, platformId,
                     money, ts, periodStart);
@@ -309,9 +309,9 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
     public static class Pay {
         public Long audienceAliasId;
         public String audienceName;
-        public Integer money;
+        public Long money;
 
-        public Pay(Long audienceAliasId, String audienceName, Integer money) {
+        public Pay(Long audienceAliasId, String audienceName, Long money) {
             this.audienceAliasId = audienceAliasId;
             this.audienceName = audienceName;
             this.money = money;

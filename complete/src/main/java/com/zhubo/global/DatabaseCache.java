@@ -47,10 +47,10 @@ public class DatabaseCache {
     
     public static class PayPeriodObject {
         public int platformId;
-        public int money;
+        public long money;
         public Date periodStart;
         public Date recordEffectiveTime;
-        public PayPeriodObject (int platformId, int money, Date periodStart, Date recordEffectiveTime) {
+        public PayPeriodObject (int platformId, long money, Date periodStart, Date recordEffectiveTime) {
            this.platformId = platformId;
            this.money = money;
            this.periodStart = periodStart;
@@ -319,11 +319,11 @@ public class DatabaseCache {
         }
         else if (oldPayPeriod.periodStart.compareTo(payPeriod.periodStart) == 0) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
-            int diffMoney = payPeriod.money - oldPayPeriod.money;
+            int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
             return diffMoney;
         } else if (oldPayPeriod.periodStart.compareTo(payPeriod.periodStart) < 0) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
-            return payPeriod.money;
+            return Long.valueOf(payPeriod.money).intValue();
         } else {
             System.out.println("-_-> is invalid pay period data");
             System.out.println("audienceId:" + audienceId + " anchorId:" + anchorId + 
@@ -346,14 +346,14 @@ public class DatabaseCache {
         } else if (isOldRound && oldPayPeriod.recordEffectiveTime.compareTo(latestRoundStart) >= 0) {
             if(payPeriod.money > oldPayPeriod.money) {
                 putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
-                int diffMoney = payPeriod.money - oldPayPeriod.money;
+                int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
                 return diffMoney;
             } else {
                 return 0;
             }
         } else {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
-            return payPeriod.money;
+            return Long.valueOf(payPeriod.money).intValue();
         }
     }
     

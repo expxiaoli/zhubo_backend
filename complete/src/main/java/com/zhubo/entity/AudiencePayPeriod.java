@@ -26,7 +26,7 @@ public class AudiencePayPeriod {
     private Integer platformId;
 
     @Column(name = "value")
-    private Integer money;
+    private Long money;
 
     @Column(name = "created")
     private Date created;
@@ -52,7 +52,7 @@ public class AudiencePayPeriod {
         return platformId;
     }
 
-    public Integer getMoney() {
+    public Long getMoney() {
         return money;
     }
 
@@ -72,7 +72,7 @@ public class AudiencePayPeriod {
         this.updated = new Date();
     }
 
-    public void setMoney(Integer money) {
+    public void setMoney(Long money) {
         this.money = money;
     }
 
@@ -88,13 +88,13 @@ public class AudiencePayPeriod {
         
     }
 
-    public AudiencePayPeriod(Long audienceId, Long anchorId, Integer platformId, Integer money,
+    public AudiencePayPeriod(Long audienceId, Long anchorId, Integer platformId, Long money,
             Date recordEffectiveTime, Date periodStart) {
         this(audienceId, anchorId, platformId, money, recordEffectiveTime, periodStart, new Date(),
                 new Date());
     }
 
-    public AudiencePayPeriod(Long audienceId, Long anchorId, Integer platformId, Integer money,
+    public AudiencePayPeriod(Long audienceId, Long anchorId, Integer platformId, Long money,
             Date recordEffectiveTime, Date periodStart, Date created, Date updated) {
         this.audienceId = audienceId;
         this.anchorId = anchorId;
