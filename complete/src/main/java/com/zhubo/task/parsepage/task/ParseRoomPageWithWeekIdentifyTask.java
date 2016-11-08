@@ -193,7 +193,7 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
         Integer diffMoney = resourceManager.getDatabaseCache()
-                .getDiffMoneyAndUpdateLatestPayPeriodInCache(audienceId, anchorId, payPeriod);
+                .getDiffMoneyAndUpdateLatestPayPeriodInCacheWithWeekIdentify(audienceId, anchorId, payPeriod);
         if (diffMoney != null && diffMoney != 0) {
             income += diffMoney;
             storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, diffMoney, ts);

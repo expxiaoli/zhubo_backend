@@ -306,7 +306,7 @@ public class DatabaseCache {
         anchorIncomeByMinutesMapper = null;
     }
     
-    public Integer getDiffMoneyAndUpdateLatestPayPeriodInCache(long audienceId, long anchorId, PayPeriodObject payPeriod) {
+    public Integer getDiffMoneyAndUpdateLatestPayPeriodInCacheWithWeekIdentify(long audienceId, long anchorId, PayPeriodObject payPeriod) {
         PayPeriodObject oldPayPeriod = getPayPeriodFromCache(latestPayPeriodMapper, audienceId, anchorId);
         if(oldPayPeriod == null) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
@@ -333,7 +333,7 @@ public class DatabaseCache {
         }
     }
     
-    public Integer getDiffMoneyAndUpdateLatestPayPeriodInCache(long audienceId, long anchorId, boolean isOldRound, Date latestRoundStart, PayPeriodObject payPeriod) {
+    public Integer getDiffMoneyAndUpdateLatestPayPeriodInCacheWithRoundIdentify(long audienceId, long anchorId, boolean isOldRound, Date latestRoundStart, PayPeriodObject payPeriod) {
         PayPeriodObject oldPayPeriod = getPayPeriodFromCache(latestPayPeriodMapper, audienceId, anchorId);
         if(oldPayPeriod == null) {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
@@ -354,6 +354,27 @@ public class DatabaseCache {
         } else {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
             return Long.valueOf(payPeriod.money).intValue();
+        }
+    }
+    
+    public Integer getDiffMoneyAndUpdateLatestPayPeriodInCacheWithHistoryIdentify(long audienceId, long anchorId, PayPeriodObject payPeriod) {
+        PayPeriodObject oldPayPeriod = getPayPeriodFromCache(latestPayPeriodMapper, audienceId, anchorId);
+        if(oldPayPeriod == null) {
+            putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+            return null;
+        } else if (oldPayPeriod.recordEffectiveTime.compareTo(payPeriod.recordEffectiveTime) >= 0)  {
+            System.out.println("-_-> is old pay data, ignore get diff money");
+            System.out.println("audienceId:" + audienceId + " anchorId:" + anchorId + 
+                    " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
+            return 0;
+        } else {
+            if(payPeriod.money > oldPayPeriod.money) {
+                putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+                int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
+                return diffMoney;
+            } else {
+                return 0;
+            }
         }
     }
     

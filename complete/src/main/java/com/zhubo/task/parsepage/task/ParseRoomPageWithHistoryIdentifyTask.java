@@ -33,11 +33,11 @@ import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 import com.zhubo.task.processdata.TimeUnit;
 
-public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
+public class ParseRoomPageWithHistoryIdentifyTask extends BaseParsePageTask {
     private Integer income;
     private boolean needCommit;
 
-    public ParseRoomPageWithRoundIdentifyTask(String filePath, Set<Long> invalidAliasIds,
+    public ParseRoomPageWithHistoryIdentifyTask(String filePath, Set<Long> invalidAliasIds,
             ResourceManager resourceManager, int platformId) {
         super(filePath, invalidAliasIds, resourceManager, platformId);
         income = 0;
@@ -93,7 +93,6 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
         List<Element> itemElements = root.getChildren();
         Long anchorAliasId = null;
         String anchorName = null;
-        Integer roundIncome = null;
         List<Metric> metrics = Lists.newArrayList();
         Map<Long, Pay> pays = Maps.newHashMap();
         for (Element itemElement : itemElements) {
@@ -104,8 +103,6 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
                     anchorAliasId = Long.valueOf(itemBody);
                 } else if (itemName.equals("昵称")) {
                     anchorName = itemBody;
-                } else if (itemName.equals("total")) {
-                    roundIncome = Integer.valueOf(itemBody);
                 } else {
                     metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
                 }
@@ -144,30 +141,19 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
             }
         }
 
-        boolean isOldRound = isOldRound(roundIncome, anchorId);
-        boolean isRoundIncomeChanged = isRoundIncomeChanged(roundIncome, anchorId);
-        Date latestRoundStart = resourceManager.getDatabaseCache().getLatestRoundStart(anchorId);
-
-        if (isRoundIncomeChanged) {
-            if(!isOldRound) {
-                resourceManager.getDatabaseCache().setLatestRoundStart(anchorId, pageDate);
+        for (Pay pay : pays.values()) {
+            Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
+                    pay.audienceName, pay.audienceAliasId);
+            if (pay.money != null) {
+                storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId, platformId,
+                        pay.money, pageDate);
             }
-            for (Pay pay : pays.values()) {
-                Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
-                        pay.audienceName, pay.audienceAliasId);
-                if (pay.money != null) {
-                    storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId, platformId,
-                            isOldRound, latestRoundStart, roundIncome, pay.money, pageDate);
-                }
-            }
-            storeRoundIncomeIfNeeded(resourceManager, anchorId, platformId, roundIncome, pageDate);            
-            resourceManager.getDatabaseCache().setRoundIncomeDate(anchorId, pageDate);
-            resourceManager.getDatabaseCache().setLatestRoundIncome(anchorId, roundIncome);
-            if (income > 0) {
-                storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income, pageDate);
-            }
-
+        }           
+        resourceManager.getDatabaseCache().setRoundIncomeDate(anchorId, pageDate);
+        if (income > 0) {
+            storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income, pageDate);
         }
+
         if (needCommit) {
             resourceManager.commit();
         } else {
@@ -186,12 +172,11 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
-            int platformId, boolean isOldRound, Date latestRoundStart, int roundIncome, long periodMoney, Date ts) {
+            int platformId, long periodMoney, Date ts) {
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
         Integer diffMoney = resourceManager.getDatabaseCache()
-                .getDiffMoneyAndUpdateLatestPayPeriodInCacheWithRoundIdentify(audienceId, anchorId, isOldRound, latestRoundStart,
-                        payPeriod);
+                .getDiffMoneyAndUpdateLatestPayPeriodInCacheWithHistoryIdentify(audienceId, anchorId, payPeriod);
         if (diffMoney != null && diffMoney != 0) {
             income += diffMoney;
             storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, diffMoney, ts);

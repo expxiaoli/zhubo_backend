@@ -19,6 +19,7 @@ import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 import com.zhubo.task.parsepage.factory.BaseParsePageFactory;
+import com.zhubo.task.parsepage.factory.ParseHuajiaoRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseQixiuPlatformPageFactory;
@@ -45,6 +46,7 @@ public class ParseAllPageTask {
         parseRoomPageFactoryClasses.put(1, ParseQixiuRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(3, ParseWoxiuRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(4, ParseHuajiaoRoomPageFactory.class);
         
         maxPlatformId = parsePlatformPageFactoryClasses.keySet().size();
     }
@@ -109,6 +111,10 @@ public class ParseAllPageTask {
             throws IOException, InstantiationException, IllegalAccessException, ParseException {
         BaseParsePageFactory factory;
         BaseParsePageTask task;
+        if(factoryClass == null) {
+            return;
+        }
+        
         factory = (BaseParsePageFactory) factoryClass.newInstance();
         TaskRun taskRun = null;
         if(updateTaskRun) {
