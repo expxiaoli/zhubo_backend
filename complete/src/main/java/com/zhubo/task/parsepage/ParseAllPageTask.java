@@ -46,9 +46,9 @@ public class ParseAllPageTask {
         parseRoomPageFactoryClasses.put(1, ParseQixiuRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(3, ParseWoxiuRoomPageFactory.class);
-        parseRoomPageFactoryClasses.put(4, ParseHuajiaoRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(5, ParseHuajiaoRoomPageFactory.class);
         
-        maxPlatformId = parsePlatformPageFactoryClasses.keySet().size();
+        maxPlatformId = ResourceManager.platforms.size();
     }
 
     public void setUpdateTaskRun(boolean updateTaskRun) {

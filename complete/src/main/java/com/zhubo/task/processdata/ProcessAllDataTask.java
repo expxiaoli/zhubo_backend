@@ -19,7 +19,7 @@ public class ProcessAllDataTask {
 
     private Date start;
     private Date end;
-    private Integer maxPlatformId = 3;
+    private Integer maxPlatformId = ResourceManager.platforms.size();
     private boolean updateTaskRun = false;
 
     public void setDates(Date start, Date end) {

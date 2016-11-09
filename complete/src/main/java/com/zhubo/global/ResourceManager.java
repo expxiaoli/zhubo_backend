@@ -23,10 +23,12 @@ public class ResourceManager {
     private Transaction transaction;
     private static volatile ResourceManager instance = null;
     private static final Object lock = new Object();
-    private static List<Platform> platforms = Lists.newArrayList(
+    public static List<Platform> platforms = Lists.newArrayList(
             new Platform(1, "奇秀"),
             new Platform(2, "来疯"),
-            new Platform(3, "我秀")
+            new Platform(3, "我秀"),
+            new Platform(4, "千帆"),
+            new Platform(5, "花椒")
             );
     private DatabaseCache dbCache;
     private int getSessionCount;
