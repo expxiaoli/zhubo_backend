@@ -6,10 +6,15 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "1005_AudiencePayByMinutes")
+@Table(name = "1005_AudiencePayByMinutes", indexes = {
+    @Index(columnList = "audience_id", name = "audience_pay_by_minutes_audience_index"),
+    @Index(columnList = "anchor_id", name = "audience_pay_by_minutes_anchor_index")
+})
+
 public class AudiencePayByMinutes {
     @Id
     @GeneratedValue
