@@ -11,7 +11,7 @@ import com.zhubo.task.parsepage.task.ParseRoomPageWithWeekIdentifyTask;
 public class ParseHuajiaoRoomPageFactory extends BaseParsePageFactory {
     @Override
     public BaseParsePageTask create(String filePath, ResourceManager resourceManager) {
-        return new ParseRoomPageWithHistoryIdentifyTask(filePath, invalidAliasIds, resourceManager, 4);
+        return new ParseRoomPageWithHistoryIdentifyTask(filePath, invalidAliasIds, resourceManager, 5);
     }
     
     @Override
