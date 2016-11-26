@@ -93,7 +93,7 @@ public class ParseAllPageTask {
         for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchParsePageCache(platformId);
             parseFiles(folderPath, invalidIdFilePath, files, platformId, parsePlatformPageFactoryClasses.get(platformId), rm);
-            parseFiles(folderPath, invalidIdFilePath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
+        //    parseFiles(folderPath, invalidIdFilePath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
             rm.clearParsePageCache();
         }
 
