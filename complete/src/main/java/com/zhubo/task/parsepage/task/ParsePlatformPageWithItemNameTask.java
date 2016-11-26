@@ -68,6 +68,7 @@ public class ParsePlatformPageWithItemNameTask extends BaseParsePageTask {
         String roomNumberText = null;        
         Long roomNumber = null;
         String nickName = null;
+        String area = null;
         for (Element itemElement : itemElements) {
             String itemName = itemElement.getChildText("cont_item_name");
             if(itemName.equals("房间号")) {
@@ -76,6 +77,9 @@ public class ParsePlatformPageWithItemNameTask extends BaseParsePageTask {
             }
             if(itemName.equals("昵称")) {
                 nickName = itemElement.getChildText("cont_item_body");
+            }
+            if(itemName.equals("地域")) {
+                area = itemElement.getChildText("cont_item_body");
             }
         }
 
@@ -89,19 +93,22 @@ public class ParsePlatformPageWithItemNameTask extends BaseParsePageTask {
         if (anchorInCache == null) {
             Anchor anchor = new Anchor(platformId, roomNumber, nickName, pageDate);
             anchor.setType(pageType);
+            anchor.setArea(area);
             resourceManager.getDatabaseSession().save(anchor);
             resourceManager.getDatabaseCache().setAnchorObjectInCache(
                     anchor.getAnchorAliasId(),
                     new AnchorObject(anchor.getAnchorId(), anchor.getArea(), anchor.getType()));
             needCommit = true;
-        } else if (pageType != null && (anchorInCache.type == null || !pageType.equals(anchorInCache.type))) {
+        } else if ((pageType != null && (anchorInCache.type == null || !pageType.equals(anchorInCache.type)))
+                || (area != null && (anchorInCache.area == null || !area.equals(anchorInCache.area)))) {
             Anchor anchor = (Anchor) resourceManager.getDatabaseSession().load(Anchor.class,
                     anchorInCache.anchorId);
             anchor.setType(pageType);
+            anchor.setArea(area);
             resourceManager.getDatabaseSession().update(anchor);
             resourceManager.getDatabaseCache().setAnchorObjectInCache(
                     anchor.getAnchorAliasId(),
-                    new AnchorObject(anchor.getAnchorId(), anchor.getArea(), pageType));
+                    new AnchorObject(anchor.getAnchorId(), area, pageType));
             needCommit = true;
         }
         if(needCommit) {
