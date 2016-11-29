@@ -22,6 +22,8 @@ import com.zhubo.task.parsepage.factory.BaseParsePageFactory;
 import com.zhubo.task.parsepage.factory.ParseHuajiaoRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengRoomPageFactory;
+import com.zhubo.task.parsepage.factory.ParseQianfangPlatformPageFactory;
+import com.zhubo.task.parsepage.factory.ParseQianfangRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseQixiuPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseQixiuRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseWoxiuPlatformPageFactory;
@@ -41,11 +43,13 @@ public class ParseAllPageTask {
         parsePlatformPageFactoryClasses.put(1, ParseQixiuPlatformPageFactory.class);
         parsePlatformPageFactoryClasses.put(2, ParseLaifengPlatformPageFactory.class);
         parsePlatformPageFactoryClasses.put(3, ParseWoxiuPlatformPageFactory.class);
+        parsePlatformPageFactoryClasses.put(4, ParseQianfangPlatformPageFactory.class);
 
         parseRoomPageFactoryClasses = Maps.newHashMap();
         parseRoomPageFactoryClasses.put(1, ParseQixiuRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(2, ParseLaifengRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(3, ParseWoxiuRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(4, ParseQianfangRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(5, ParseHuajiaoRoomPageFactory.class);
         
         maxPlatformId = ResourceManager.platforms.size();
@@ -93,7 +97,7 @@ public class ParseAllPageTask {
         for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
             rm.loadBatchParsePageCache(platformId);
             parseFiles(folderPath, invalidIdFilePath, files, platformId, parsePlatformPageFactoryClasses.get(platformId), rm);
-        //    parseFiles(folderPath, invalidIdFilePath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
+            parseFiles(folderPath, invalidIdFilePath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
             rm.clearParsePageCache();
         }
 

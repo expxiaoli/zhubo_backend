@@ -1,5 +1,6 @@
 package com.zhubo.global;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class DatabaseCache {
     private Map<Long, Map<Long, Set<Date>>> audiencePayByDaysDatesMapper;
     private Map<Long, Set<Date>> anchorIncomeByDaysDatesMapper;
     private Map<Long, Set<Date>> audienceTotalPayByDaysDatesMapper;
+    private Map<Long, TopAudiencePayForOneAnchor> topAudiencePayForOneAnchorMapper;
     
     public static class PayPeriodObject {
         public int platformId;
@@ -70,6 +72,12 @@ public class DatabaseCache {
         }
     }
     
+    public static class TopAudiencePayForOneAnchor {
+        public long audienceId;
+        public long money;
+        public Date recordEffectiveTime;
+    }
+    
     public DatabaseCache(ResourceManager rm, Date minTs, Date maxTs) {
         this.rm = rm;
         this.minTs = minTs;
@@ -86,6 +94,7 @@ public class DatabaseCache {
         batchLoadAnchorIncomeByMinutes(platformId);
         batchLoadRoundIncomeDates(platformId);
         batchLoadLatestRoundIncome(platformId);
+        batchLoadTopAudiencePayForOneAnchor(platformId);
     }
     
     public void batchLoadProcessData(int platformId) {
@@ -105,6 +114,7 @@ public class DatabaseCache {
         clearAnchorIncomeByMinutes();
         clearRoundIncomeDates();
         clearLatestRoundIncome();
+        clearTopAudiencePayForOneAnchor();
     }
     
     public void clearProcessData() {
@@ -344,6 +354,30 @@ public class DatabaseCache {
                     " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
             return 0;
         } else if (isOldRound && oldPayPeriod.recordEffectiveTime.compareTo(latestRoundStart) >= 0) {
+            if(payPeriod.money > oldPayPeriod.money) {
+                putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+                int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
+                return diffMoney;
+            } else {
+                return 0;
+            }
+        } else {
+            putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+            return Long.valueOf(payPeriod.money).intValue();
+        }
+    }
+    
+    public Integer getDiffMoneyAndUpdateLatestPayPeriodInCacheWithTopAudienceIdentify(long audienceId, long anchorId, boolean isOldRound, PayPeriodObject payPeriod) {
+        PayPeriodObject oldPayPeriod = getPayPeriodFromCache(latestPayPeriodMapper, audienceId, anchorId);
+        if(oldPayPeriod == null) {
+            putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+            return null;
+        } else if (oldPayPeriod.recordEffectiveTime.compareTo(payPeriod.recordEffectiveTime) >= 0)  {
+            System.out.println("-_-> is old pay data, ignore get diff money");
+            System.out.println("audienceId:" + audienceId + " anchorId:" + anchorId + 
+                    " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
+            return 0;
+        } else if (isOldRound) {
             if(payPeriod.money > oldPayPeriod.money) {
                 putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
                 int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
@@ -686,6 +720,50 @@ public class DatabaseCache {
             latestRoundIncomeMapper.put(record.getAnchorId(), record.getMoney());
         }
         System.out.println("batchLoadLatestRoundIncome done");
+    }
+    
+    private void batchLoadTopAudiencePayForOneAnchor(int platformId) {
+        topAudiencePayForOneAnchorMapper = Maps.newHashMap();
+        Session session = rm.getDatabaseSession();
+        Query query = session.createQuery("from AudiencePayPeriod where platform_id = :platform_id and record_effective_time < :min_ts and record_effective_time > :near_2_days order by record_effective_time asc");
+        query.setParameter("min_ts", minTs);
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(minTs);
+        cal.add(Calendar.DATE, -1);
+        Date near2Days = cal.getTime();
+        query.setParameter("near_2_days", near2Days);
+        query.setParameter("platform_id", platformId);
+        List<AudiencePayPeriod> records = query.list();
+        for(AudiencePayPeriod record : records) {
+            long anchorId = record.getAnchorId();
+            Date ts = record.getRecordEffectiveTime();
+            long money = record.getMoney();
+            if(topAudiencePayForOneAnchorMapper.get(anchorId) == null ||
+               topAudiencePayForOneAnchorMapper.get(anchorId).recordEffectiveTime.compareTo(ts) < 0 ||
+               (topAudiencePayForOneAnchorMapper.get(anchorId).recordEffectiveTime.compareTo(ts) == 0 && topAudiencePayForOneAnchorMapper.get(anchorId).money < money)) {
+                TopAudiencePayForOneAnchor top = new TopAudiencePayForOneAnchor();
+                top.audienceId = record.getAudienceId();
+                top.money = money;
+                top.recordEffectiveTime = ts;
+                topAudiencePayForOneAnchorMapper.put(anchorId, top);
+            }
+        }      
+    }
+    
+    public TopAudiencePayForOneAnchor getTopAudiencePayForOneAnchor(long anchorId) {
+        return topAudiencePayForOneAnchorMapper.get(anchorId);
+    }
+    
+    public void setTopAudiencePayForOneAnchor(long anchorId, long audienceId, long money, Date ts) {
+        TopAudiencePayForOneAnchor top = new TopAudiencePayForOneAnchor();
+        top.audienceId = audienceId;
+        top.money = money;
+        top.recordEffectiveTime = ts;
+        topAudiencePayForOneAnchorMapper.put(anchorId, top);
+    }
+    
+    private void clearTopAudiencePayForOneAnchor() {
+        topAudiencePayForOneAnchorMapper.clear();
     }
     
     public Integer getLatestRoundIncome(long anchorId) {

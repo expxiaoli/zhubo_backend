@@ -28,16 +28,17 @@ import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.DatabaseCache;
 import com.zhubo.global.DatabaseCache.AnchorObject;
 import com.zhubo.global.DatabaseCache.PayPeriodObject;
+import com.zhubo.global.DatabaseCache.TopAudiencePayForOneAnchor;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.helper.ModelHelper;
 import com.zhubo.task.processdata.TimeUnit;
 
-public class ParseRoomPageWithHistoryIdentifyTask extends BaseParsePageTask {
+public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask {
     private Integer income;
     private boolean needCommit;
 
-    public ParseRoomPageWithHistoryIdentifyTask(String filePath, Set<Long> invalidAliasIds,
+    public ParseRoomPageWithTopAudienceIdentifyTask(String filePath, Set<Long> invalidAliasIds,
             ResourceManager resourceManager, int platformId) {
         super(filePath, invalidAliasIds, resourceManager, platformId);
         income = 0;
@@ -128,8 +129,13 @@ public class ParseRoomPageWithHistoryIdentifyTask extends BaseParsePageTask {
             System.out.println("-_-> invalid alias id " + anchorAliasId + ", ignore this page");
             return;
         }
+        
         Long anchorId = getAnchorIdOrNew(resourceManager, platformId, anchorAliasId, anchorName,
                 pageDate);
+        if(hasProcessed(anchorId, pageDate)) {
+            System.out.println("-_-> old top pay ts is newer or same, ignore this page");
+            return;
+        }
 
         for (Metric metric : metrics) {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchorId, metric.type,
@@ -141,32 +147,74 @@ public class ParseRoomPageWithHistoryIdentifyTask extends BaseParsePageTask {
             }
         }
 
+        boolean isOldRound = isOldRound(pays, anchorId, pageDate);
+
+        if(!isOldRound) {
+            resourceManager.getDatabaseCache().setLatestRoundStart(anchorId, pageDate);
+        }
         for (Pay pay : pays.values()) {
             Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
             if (pay.money != null) {
                 storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId, platformId,
-                        pay.money, pageDate);
+                        isOldRound, pay.money, pageDate);
             }
-        }           
-        resourceManager.getDatabaseCache().setRoundIncomeDate(anchorId, pageDate);
+        }            
         if (income > 0) {
             storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income, pageDate);
         }
-
+        updateTopAudiencePayForOneAnchor(anchorId, pays, pageDate);
+        
         if (needCommit) {
             resourceManager.commit();
         } else {
             System.out.println("old page, ignore commit");
         }
     }
+    
+    private void updateTopAudiencePayForOneAnchor(long anchorId, Map<Long, Pay> pays, Date pageDate) {
+        Pay maxPay = null;
+        for(Pay pay : pays.values()) {
+            if(maxPay == null || maxPay.money < pay.money) {
+                maxPay = pay;
+            }
+        }
+        long audienceId = resourceManager.getDatabaseCache().getIdFromAudienceAliasId(platformId, maxPay.audienceAliasId);
+        resourceManager.getDatabaseCache().setTopAudiencePayForOneAnchor(anchorId, audienceId, maxPay.money, pageDate);
+    }
+
+    private boolean isOldRound(Map<Long, Pay> pays, long anchorId, Date pageDate) {
+        TopAudiencePayForOneAnchor oldTopAudiencePay = resourceManager.getDatabaseCache().getTopAudiencePayForOneAnchor(anchorId);
+        if(oldTopAudiencePay != null) {
+            for(long audienceAliasId : pays.keySet()) {
+                Long audienceId = resourceManager.getDatabaseCache().getIdFromAudienceAliasId(platformId, audienceAliasId);
+                if(audienceId != null && audienceId.equals(oldTopAudiencePay.audienceId) && 
+                        pageDate.compareTo(oldTopAudiencePay.recordEffectiveTime) > 0 && 
+                        pays.get(audienceAliasId).money >= oldTopAudiencePay.money) {
+                    return true;          
+                }
+            }
+        }
+        return false;
+    }
+    
+    private boolean hasProcessed(long anchorId, Date pageDate) {
+        TopAudiencePayForOneAnchor oldTopAudiencePay = resourceManager.getDatabaseCache().getTopAudiencePayForOneAnchor(anchorId);
+        return oldTopAudiencePay != null && pageDate.compareTo(oldTopAudiencePay.recordEffectiveTime) <= 0;
+    }
+
+    private boolean isRoundIncomeChanged(int roundIncome, long anchorId) {
+        Integer oldRoundIncome = resourceManager.getDatabaseCache().getLatestRoundIncome(anchorId);
+        return oldRoundIncome == null || !oldRoundIncome.equals(roundIncome);
+    }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
-            int platformId, long periodMoney, Date ts) {
+            int platformId, boolean isOldRound, long periodMoney, Date ts) {
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
         Integer diffMoney = resourceManager.getDatabaseCache()
-                .getDiffMoneyAndUpdateLatestPayPeriodInCacheWithHistoryIdentify(audienceId, anchorId, payPeriod);
+                .getDiffMoneyAndUpdateLatestPayPeriodInCacheWithTopAudienceIdentify(audienceId, anchorId, isOldRound,
+                        payPeriod);
         if (diffMoney != null && diffMoney != 0) {
             income += diffMoney;
             storeMinutePayIfNeeded(rm, audienceId, anchorId, platformId, diffMoney, ts);
@@ -204,21 +252,6 @@ public class ParseRoomPageWithHistoryIdentifyTask extends BaseParsePageTask {
             System.out.println(String.format(
                     "exist in minute pay for platform_id %d, anchor_id %d, audience_id %d, ignore",
                     platformId, anchorId, audienceId));
-        }
-    }
-
-    private void storeRoundIncomeIfNeeded(ResourceManager rm, long anchorId, int platformId,
-            int money, Date ts) {
-        if (!rm.getDatabaseCache().existInRoundIncomeDates(anchorId, ts)) {
-            AnchorRoundIncomeByMinutes roundIncome = new AnchorRoundIncomeByMinutes(anchorId,
-                    platformId, money, ts);
-            rm.getDatabaseSession().save(roundIncome);
-            needCommit = true;
-        } else {
-            System.out
-                    .println(String
-                            .format("exist in minute round income for platform_id %d, anchor_id %d, ignore",
-                                    platformId, anchorId));
         }
     }
 

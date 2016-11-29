@@ -52,12 +52,12 @@ public class ParseAndProcessApp {
         Date endFolderDate = addDay(startFolderDate, 1);
         parseTask.run(dataFolderPath, invalidIdFilePath);
 
-/*        ProcessAllDataTask processTask = new ProcessAllDataTask();
+        ProcessAllDataTask processTask = new ProcessAllDataTask();
         processTask.setUpdateTaskRun(true);
         System.out.println("begin to process data from " + startFolderDate.toString() + " to " + endFolderDate.toString());
         processTask.setDates(startFolderDate, endFolderDate);
         processTask.run();
-*/
+
         ModelHelper.markTaskGroupSuccess(rm, tgr);
         System.out.println("parse and process file done: " + dateFolderName);
     }
