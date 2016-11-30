@@ -114,7 +114,7 @@ public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask 
                         .getChildText("vipuserid"));
                 Long money = StringUtils.isNullOrEmpty(itemElement.getChildText("top_money")) ? null
                         : Long.valueOf(itemElement.getChildText("top_money"));
-                if (audienceName != null && audienceAliasId != null
+                if (audienceName != null && audienceAliasId != null && money != null
                         && !pays.containsKey(audienceAliasId)) {
                     pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
                 }
