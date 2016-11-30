@@ -147,23 +147,25 @@ public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask 
             }
         }
 
-        boolean isOldRound = isOldRound(pays, anchorId, pageDate);
+        if(pays.size() > 0) {
+            boolean isOldRound = isOldRound(pays, anchorId, pageDate);
 
-        if(!isOldRound) {
-            resourceManager.getDatabaseCache().setLatestRoundStart(anchorId, pageDate);
-        }
-        for (Pay pay : pays.values()) {
-            Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
-                    pay.audienceName, pay.audienceAliasId);
-            if (pay.money != null) {
-                storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId, platformId,
-                        isOldRound, pay.money, pageDate);
+            if(!isOldRound) {
+                resourceManager.getDatabaseCache().setLatestRoundStart(anchorId, pageDate);
             }
-        }            
-        if (income > 0) {
-            storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income, pageDate);
+            for (Pay pay : pays.values()) {
+                Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
+                    pay.audienceName, pay.audienceAliasId);
+                if (pay.money != null) {
+                    storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId, platformId,
+                        isOldRound, pay.money, pageDate);
+                }
+            }            
+            if (income > 0) {
+                storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income, pageDate);
+            }
+            updateTopAudiencePayForOneAnchor(anchorId, pays, pageDate);
         }
-        updateTopAudiencePayForOneAnchor(anchorId, pays, pageDate);
         
         if (needCommit) {
             resourceManager.commit();
