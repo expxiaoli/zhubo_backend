@@ -122,8 +122,8 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
                 }
             }
         }
-        if(anchorAliasId == null) {
-            System.out.println("-_-> anchor alias id is null, ignore this page");
+        if(anchorAliasId == null || anchorAliasId.equals(0L)) {
+            System.out.println("-_-> anchor alias id is null or 0, ignore this page");
             return;
         }
         

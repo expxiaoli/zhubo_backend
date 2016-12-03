@@ -28,6 +28,7 @@ import com.zhubo.task.parsepage.factory.ParseQixiuPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseQixiuRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseWoxiuPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseWoxiuRoomPageFactory;
+import com.zhubo.task.parsepage.factory.ParseYizhiboRoomPageFactory;
 import com.zhubo.task.parsepage.task.BaseParsePageTask;
 
 public class ParseAllPageTask {
@@ -51,6 +52,7 @@ public class ParseAllPageTask {
         parseRoomPageFactoryClasses.put(3, ParseWoxiuRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(4, ParseQianfangRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(5, ParseHuajiaoRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(6, ParseYizhiboRoomPageFactory.class);
         
         maxPlatformId = ResourceManager.platforms.size();
     }

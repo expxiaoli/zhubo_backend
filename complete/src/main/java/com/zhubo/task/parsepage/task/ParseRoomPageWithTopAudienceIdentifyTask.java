@@ -13,6 +13,7 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
+import org.springframework.util.NumberUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -105,7 +106,9 @@ public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask 
                 } else if (itemName.equals("昵称")) {
                     anchorName = itemBody;
                 } else {
-                    metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
+                    if(StringUtils.isStrictlyNumeric(itemBody)) {
+                        metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
+                    }
                 }
             } else if (itemElement.getChild("top_name") != null) {
                 String audienceName = itemElement.getChildText("top_name");
@@ -120,8 +123,8 @@ public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask 
                 }
             }
         }
-        if(anchorAliasId == null) {
-            System.out.println("-_-> anchor alias id is null, ignore this page");
+        if(anchorAliasId == null || anchorAliasId.equals(0L)) {
+            System.out.println("-_-> anchor alias id is null or 0, ignore this page");
             return;
         }
         

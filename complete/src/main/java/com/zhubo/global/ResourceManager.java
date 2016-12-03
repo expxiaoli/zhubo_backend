@@ -28,7 +28,8 @@ public class ResourceManager {
             new Platform(2, "来疯"),
             new Platform(3, "我秀"),
             new Platform(4, "千帆"),
-            new Platform(5, "花椒")
+            new Platform(5, "花椒"),
+            new Platform(6, "一直播")
             );
     private DatabaseCache dbCache;
     private int getSessionCount;
