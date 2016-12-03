@@ -34,7 +34,8 @@ public class ProcessAllDataTask {
     public void run() throws InstantiationException, IllegalAccessException {
         ResourceManager rm = ResourceManager.generateResourceManager();
         rm.initDatabaseCache(start, end);
-        for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
+ //       for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
+        int platformId = 6;
             System.out.println(String.format("begin to process platform %d data", platformId));
             rm.loadBatchProcessDataCache(platformId);
             for (Class factoryClass : processDataFactoryClasses) {
@@ -53,7 +54,7 @@ public class ProcessAllDataTask {
                 }
             }
             rm.clearProcessDataCache();
-        }
+//        }
     }
 /*
     public static void main(String[] args) throws InstantiationException, IllegalAccessException {
