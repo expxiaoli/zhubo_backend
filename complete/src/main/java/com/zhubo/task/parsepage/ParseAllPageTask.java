@@ -97,13 +97,14 @@ public class ParseAllPageTask {
         rm.initDatabaseCache(GeneralHelper.parseDateFromFileMiddleName(minMiddleName),
                 GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));
 
-        for (Platform platform : ResourceManager.platforms) {
-            int platformId = platform.getPlatformId();
+ //       for (Platform platform : ResourceManager.platforms) {
+ //           int platformId = platform.getPlatformId();
+            int platformId = 12;
             rm.loadBatchParsePageCache(platformId);
             parseFiles(folderPath, invalidIdFilePath, files, platformId, parsePlatformPageFactoryClasses.get(platformId), rm);
             parseFiles(folderPath, invalidIdFilePath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
             rm.clearParsePageCache();
-        }
+//        }
 
         System.out.println("ParseAllPageTask done");
         System.out.println(String.format(
