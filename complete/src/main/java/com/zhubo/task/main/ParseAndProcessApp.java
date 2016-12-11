@@ -149,7 +149,12 @@ public class ParseAndProcessApp {
 
     public static void main(String[] args) throws InstantiationException, IllegalAccessException,
             IOException, ParseException {
+        if(args.length != 2) {
+            System.out.println("args: catchup_folder invalid_uid_folder");
+            return;
+        }
         new ParseAndProcessApp(args[0], args[1]).run();
+        System.exit(0);
     }
 
 }

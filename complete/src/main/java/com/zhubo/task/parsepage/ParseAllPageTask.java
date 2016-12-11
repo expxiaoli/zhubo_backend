@@ -13,6 +13,7 @@ import org.jdom.JDOMException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zhubo.entity.Platform;
 import com.zhubo.entity.TaskRun;
 import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
@@ -28,6 +29,7 @@ import com.zhubo.task.parsepage.factory.ParseQixiuPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseQixiuRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseWoxiuPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseWoxiuRoomPageFactory;
+import com.zhubo.task.parsepage.factory.ParseYingkeRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseYizhiboRoomPageFactory;
 import com.zhubo.task.parsepage.task.BaseParsePageTask;
 
@@ -36,7 +38,6 @@ public class ParseAllPageTask {
     private Map<Integer, Class> parsePlatformPageFactoryClasses;
     private Map<Integer, Class> parseRoomPageFactoryClasses;
     private Map<Class, List<File>> classToFilesMapping;
-    private int maxPlatformId;
     private boolean updateTaskRun = false;
 
     public ParseAllPageTask() {
@@ -53,8 +54,8 @@ public class ParseAllPageTask {
         parseRoomPageFactoryClasses.put(4, ParseQianfangRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(5, ParseHuajiaoRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(6, ParseYizhiboRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(12, ParseYingkeRoomPageFactory.class);
         
-        maxPlatformId = ResourceManager.platforms.size();
     }
 
     public void setUpdateTaskRun(boolean updateTaskRun) {
@@ -96,7 +97,8 @@ public class ParseAllPageTask {
         rm.initDatabaseCache(GeneralHelper.parseDateFromFileMiddleName(minMiddleName),
                 GeneralHelper.parseDateFromFileMiddleName(maxMiddleName));
 
-        for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
+        for (Platform platform : ResourceManager.platforms) {
+            int platformId = platform.getPlatformId();
             rm.loadBatchParsePageCache(platformId);
             parseFiles(folderPath, invalidIdFilePath, files, platformId, parsePlatformPageFactoryClasses.get(platformId), rm);
             parseFiles(folderPath, invalidIdFilePath, files, platformId, parseRoomPageFactoryClasses.get(platformId), rm);
@@ -160,7 +162,7 @@ public class ParseAllPageTask {
         List<File> validFiles = Lists.newArrayList();
         for (File file : files) {
             String[] parts = file.getName().split("-");
-            if (parts.length == 4 && parts[2].length() == 14 && !file.getName().endsWith("swp")) {
+            if (parts.length == 4 && (parts[2].length() == 14 || parts[2].length() == 17 )&& !file.getName().endsWith("swp")) {
                 validFiles.add(file);
             }
         }

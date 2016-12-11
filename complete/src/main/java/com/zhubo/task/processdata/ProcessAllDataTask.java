@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.zhubo.entity.Platform;
 import com.zhubo.entity.TaskRun;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.ModelHelper;
@@ -19,7 +20,6 @@ public class ProcessAllDataTask {
 
     private Date start;
     private Date end;
-    private Integer maxPlatformId = ResourceManager.platforms.size();
     private boolean updateTaskRun = false;
 
     public void setDates(Date start, Date end) {
@@ -34,7 +34,8 @@ public class ProcessAllDataTask {
     public void run() throws InstantiationException, IllegalAccessException {
         ResourceManager rm = ResourceManager.generateResourceManager();
         rm.initDatabaseCache(start, end);
-        for (int platformId = 1; platformId <= maxPlatformId; platformId++) {
+        for (Platform platform : ResourceManager.platforms) {
+            int platformId = platform.getPlatformId();
             System.out.println(String.format("begin to process platform %d data", platformId));
             rm.loadBatchProcessDataCache(platformId);
             for (Class factoryClass : processDataFactoryClasses) {
