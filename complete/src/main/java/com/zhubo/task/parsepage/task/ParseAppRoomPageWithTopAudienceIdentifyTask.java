@@ -55,9 +55,14 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
         InputStreamReader input = new InputStreamReader(new FileInputStream(file));
         BufferedReader bufferedReader = new BufferedReader(input);
         String line = bufferedReader.readLine();
-        JSONObject json = JSONObject.parseObject(line);
-        parseAndStoreMetric(json);
-        return true;
+        try {
+            JSONObject json = JSONObject.parseObject(line);
+            parseAndStoreMetric(json);
+            return true;
+        }catch(com.alibaba.fastjson.JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private void parseAndStoreMetric(JSONObject json) {
