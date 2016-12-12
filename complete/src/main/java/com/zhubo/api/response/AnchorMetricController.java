@@ -35,7 +35,7 @@ import com.zhubo.helper.GeneralHelper;
 public class AnchorMetricController {
 
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-    private final int maxTopAudience = 7;
+    private final int maxTopAudience = 20;
 
     @RequestMapping("/anchor_metric_minute")
     public AnchorMetricResponse getMetricMinute(@RequestParam(value = "anchor_id") Long anchorId,
