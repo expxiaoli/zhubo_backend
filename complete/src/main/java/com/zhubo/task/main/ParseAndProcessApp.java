@@ -146,7 +146,7 @@ public class ParseAndProcessApp {
             return null;
         }
     }
-
+/*
     public static void main(String[] args) throws InstantiationException, IllegalAccessException,
             IOException, ParseException {
         if(args.length != 2) {
@@ -156,5 +156,5 @@ public class ParseAndProcessApp {
         new ParseAndProcessApp(args[0], args[1]).run();
         System.exit(0);
     }
-
+*/
 }
