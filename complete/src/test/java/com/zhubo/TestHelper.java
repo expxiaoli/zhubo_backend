@@ -17,4 +17,10 @@ public class TestHelper {
         Assert.assertEquals(GeneralHelper.getAggregateDate(new Date(2016-1900, 9, 16), TimeUnit.WEEK), new Date(2016-1900, 9, 10));
         Assert.assertEquals(GeneralHelper.getAggregateDate(new Date(2016-1900, 9, 17), TimeUnit.WEEK), new Date(2016-1900, 9, 17));
     }
+    
+    @Test
+    public void testGetIntegerFromComplexString() {
+        Assert.assertEquals(new Integer(15000), GeneralHelper.getIntegerFromComplextString("1.5万"));
+        Assert.assertEquals(new Integer(15000), GeneralHelper.getIntegerFromComplextString("15000"));
+    }
 }

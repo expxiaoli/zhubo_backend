@@ -53,4 +53,13 @@ public class GeneralHelper {
         now.add(Calendar.DAY_OF_YEAR, day);  
         return now.getTime(); 
     }
+    
+    public static Integer getIntegerFromComplextString(String s) {
+        if(s.endsWith("万")) {
+            String pureStr = s.substring(0, s.length() - 1);
+            return (int) (Double.valueOf(pureStr) * 10000);
+        } else {
+            return Integer.valueOf(s);
+        }
+    }
 }

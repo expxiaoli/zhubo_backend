@@ -102,7 +102,7 @@ public class ParseRoomPageWithWeekIdentifyTask extends BaseParsePageTask {
                 } else if (itemName.equals("昵称")) {
                     anchorName = itemBody;
                 } else {
-                    metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
+                    metrics.add(new Metric(itemName, GeneralHelper.getIntegerFromComplextString(itemBody)));
                 }
             } else if (itemElement.getChild("top_name") != null) {
                 String audienceName = itemElement.getChildText("top_name");

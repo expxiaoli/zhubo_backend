@@ -107,7 +107,7 @@ public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask 
                     anchorName = itemBody;
                 } else {
                     if(StringUtils.isStrictlyNumeric(itemBody)) {
-                        metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
+                        metrics.add(new Metric(itemName, GeneralHelper.getIntegerFromComplextString(itemBody)));
                     }
                 }
             } else if (itemElement.getChild("top_name") != null) {

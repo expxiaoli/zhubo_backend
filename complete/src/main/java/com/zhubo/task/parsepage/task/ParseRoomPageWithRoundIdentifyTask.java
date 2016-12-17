@@ -107,7 +107,7 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
                 } else if (itemName.equals("total")) {
                     roundIncome = Integer.valueOf(itemBody);
                 } else {
-                    metrics.add(new Metric(itemName, Integer.valueOf(itemBody)));
+                    metrics.add(new Metric(itemName, GeneralHelper.getIntegerFromComplextString(itemBody)));
                 }
             } else if (itemElement.getChild("top_name") != null) {
                 String audienceName = itemElement.getChildText("top_name");
