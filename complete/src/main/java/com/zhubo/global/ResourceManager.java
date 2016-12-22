@@ -30,6 +30,7 @@ public class ResourceManager {
             new Platform(4, "千帆"),
             new Platform(5, "花椒"),
             new Platform(6, "一直播"),
+            new Platform(7, "YY"),
             new Platform(12, "映客")
             );
     private DatabaseCache dbCache;
