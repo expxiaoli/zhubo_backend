@@ -31,5 +31,6 @@
     	<mapping class="com.zhubo.entity.TaskRun"/>
     	<mapping class="com.zhubo.entity.TaskGroupRun"/>
     	<mapping class="com.zhubo.entity.AnchorRoundIncomeByMinutes"/>
+    	<mapping class="com.zhubo.entity.PlatformTaskRun"/>
     </session-factory>
 </hibernate-configuration>

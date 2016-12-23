@@ -14,6 +14,7 @@ import com.zhubo.entity.Audience;
 import com.zhubo.entity.AudiencePayByMinutes;
 import com.zhubo.entity.AudiencePayPeriod;
 import com.zhubo.entity.Platform;
+import com.zhubo.entity.PlatformTaskRun;
 import com.zhubo.entity.TaskGroupRun;
 import com.zhubo.entity.TaskRun;
 import com.zhubo.global.DatabaseCache.PayPeriodObject;
@@ -144,5 +145,17 @@ public class ModelHelper {
         rm.getDatabaseSession().update(tgr);
         rm.commit();
     }
-       
+    
+    public static PlatformTaskRun markPlatformTaskRunStart(ResourceManager rm, String dataTime, int platformId) {
+        PlatformTaskRun platformTaskRun = new PlatformTaskRun(platformId, dataTime, new Date());
+        rm.getDatabaseSession().save(platformTaskRun);
+        rm.commit();
+        return platformTaskRun;
+    }
+    
+    public static void markPlatformTaskRunSuccess(ResourceManager rm, PlatformTaskRun ptr) {
+        ptr.setSuccessAndCompleted(true, new Date());
+        rm.getDatabaseSession().update(ptr);
+        rm.commit();
+    }
 }

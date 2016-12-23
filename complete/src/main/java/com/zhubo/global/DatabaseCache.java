@@ -378,12 +378,17 @@ public class DatabaseCache {
                     " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
             return 0;
         } else if (isOldRound) {
-            if(payPeriod.money > oldPayPeriod.money) {
-                putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
-                int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
-                return diffMoney;
+            if(oldPayPeriod.recordEffectiveTime.getTime() >= getLatestRoundStart(anchorId).getTime()) {
+                if(payPeriod.money > oldPayPeriod.money) {
+                    putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+                    int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
+                    return diffMoney;
+                } else {
+                    return 0;
+                }
             } else {
-                return 0;
+                putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
+                return Long.valueOf(payPeriod.money).intValue();
             }
         } else {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
@@ -436,7 +441,6 @@ public class DatabaseCache {
         } else {
             return null;
         }
-        
     } 
     
     public AnchorObject getAnchorObjectFromCache(Long anchorAliasId) {
