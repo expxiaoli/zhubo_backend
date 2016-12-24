@@ -155,6 +155,7 @@ public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask 
 
             if(!isOldRound) {
                 resourceManager.getDatabaseCache().setLatestRoundStart(anchorId, pageDate);
+                resourceManager.getDatabaseCache().setPayPeriodInCacheToZeroForOneAnchor(anchorId, pageDate);
             }
             for (Pay pay : pays.values()) {
                 Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,

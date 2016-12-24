@@ -247,12 +247,23 @@ public class DatabaseCache {
     
     private void putPayPeriodInCacheIfNotExist(long audienceId, long anchorId, 
             PayPeriodObject payPeriod) {
-        if(!latestPayPeriodMapper.containsKey(audienceId)) {
-            latestPayPeriodMapper.put(audienceId, Maps.newHashMap());
+        if(!latestPayPeriodMapper.containsKey(anchorId)) {
+            latestPayPeriodMapper.put(anchorId, Maps.newHashMap());
         }
-        Map<Long, PayPeriodObject> audiencePays = latestPayPeriodMapper.get(audienceId);
-        if(!audiencePays.containsKey(anchorId)) {
-            audiencePays.put(anchorId, payPeriod);
+        Map<Long, PayPeriodObject> anchorPays = latestPayPeriodMapper.get(anchorId);
+        if(!anchorPays.containsKey(audienceId)) {
+            anchorPays.put(audienceId, payPeriod);
+        }
+    }
+    
+    public void setPayPeriodInCacheToZeroForOneAnchor(long anchorId, Date ts) {
+        Map<Long, PayPeriodObject> anchorPays = latestPayPeriodMapper.get(anchorId);
+        if(anchorPays != null) {
+            for(long audienceId : anchorPays.keySet()) {
+                PayPeriodObject obj = anchorPays.get(audienceId);
+                obj.money = 0;
+                obj.recordEffectiveTime = ts;
+            }
         }
     }
     
@@ -378,17 +389,12 @@ public class DatabaseCache {
                     " old:" + oldPayPeriod.recordEffectiveTime.toString() + " new:" + payPeriod.recordEffectiveTime.toString());
             return 0;
         } else if (isOldRound) {
-            if(oldPayPeriod.recordEffectiveTime.getTime() >= getLatestRoundStart(anchorId).getTime()) {
-                if(payPeriod.money > oldPayPeriod.money) {
-                    putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
-                    int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
-                    return diffMoney;
-                } else {
-                    return 0;
-                }
-            } else {
+            if(payPeriod.money > oldPayPeriod.money) {
                 putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
-                return Long.valueOf(payPeriod.money).intValue();
+                int diffMoney = Long.valueOf(payPeriod.money - oldPayPeriod.money).intValue();
+                return diffMoney;
+            } else {
+                return 0;
             }
         } else {
             putPayPeriodInCache(latestPayPeriodMapper, audienceId, anchorId, payPeriod);
@@ -419,11 +425,11 @@ public class DatabaseCache {
     
     private void putPayPeriodInCache(Map<Long, Map<Long, PayPeriodObject>> payPeriodMapper, long audienceId, long anchorId, 
             PayPeriodObject payPeriod) {
-        if(!payPeriodMapper.containsKey(audienceId)) {
-            payPeriodMapper.put(audienceId, Maps.newHashMap());
+        if(!payPeriodMapper.containsKey(anchorId)) {
+            payPeriodMapper.put(anchorId, Maps.newHashMap());
         }
-        Map<Long, PayPeriodObject> audiencePays = payPeriodMapper.get(audienceId);
-        audiencePays.put(anchorId, payPeriod);
+        Map<Long, PayPeriodObject> anchorPays = payPeriodMapper.get(anchorId);
+        anchorPays.put(audienceId, payPeriod);
     }
     
     public PayPeriodObject getLatestPayPeriodFromCache(long audienceId, long anchorId) {
@@ -431,10 +437,10 @@ public class DatabaseCache {
     }
     
     private PayPeriodObject getPayPeriodFromCache(Map<Long, Map<Long, PayPeriodObject>> payCache, long audienceId, long anchorId) {
-        if(payCache.containsKey(audienceId)) {
-            Map<Long, PayPeriodObject> audiencePays = payCache.get(audienceId);
-            if(audiencePays.containsKey(anchorId)) {
-                return audiencePays.get(anchorId);
+        if(payCache.containsKey(anchorId)) {
+            Map<Long, PayPeriodObject> anchorPays = payCache.get(anchorId);
+            if(anchorPays.containsKey(audienceId)) {
+                return anchorPays.get(audienceId);
             } else {
                 return null;
             }
