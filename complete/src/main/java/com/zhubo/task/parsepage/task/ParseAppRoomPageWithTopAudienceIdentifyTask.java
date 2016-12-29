@@ -73,8 +73,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
         String anchorName = json.getString("nick");
         JSONArray vips = JSONObject.parseArray(json.getString("viplist"));
         List<Metric> metrics = Lists.newArrayList();
-        metrics.add(new Metric("星光", flowers));
-        
+        if(flowers != null) {
+            metrics.add(new Metric("星光", flowers));
+        }
 
         Map<Long, Pay> pays = Maps.newHashMap();
         for (int i = 0; i < vips.size(); i++) {
