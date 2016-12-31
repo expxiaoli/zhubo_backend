@@ -71,19 +71,22 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
         Integer flowers = json.getInteger("fllowers");
         Long anchorAliasId = json.getLong("ykid");
         String anchorName = json.getString("nick");
-        JSONArray vips = JSONObject.parseArray(json.getString("viplist"));
+        String viplist = json.getString("viplist");
         List<Metric> metrics = Lists.newArrayList();
         if(flowers != null) {
             metrics.add(new Metric("星光", flowers));
         }
-
+      
         Map<Long, Pay> pays = Maps.newHashMap();
-        for (int i = 0; i < vips.size(); i++) {
-            JSONObject vip = (JSONObject) vips.get(i);
-            String audienceName = vip.getJSONObject("user").getString("nick");
-            Long audienceAliasId = vip.getJSONObject("user").getLong("id");
-            Long money = vip.getLong("contribution");
-            pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
+        if(viplist != null) {
+            JSONArray vips = JSONObject.parseArray(viplist);  
+            for (int i = 0; i < vips.size(); i++) {
+                JSONObject vip = (JSONObject) vips.get(i);
+                String audienceName = vip.getJSONObject("user").getString("nick");
+                Long audienceAliasId = vip.getJSONObject("user").getLong("id");
+                Long money = vip.getLong("contribution");
+                pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
+            }
         }
         if(anchorAliasId == null || anchorAliasId.equals(0L)) {
             System.out.println("-_-> anchor alias id is null or 0, ignore this page");
