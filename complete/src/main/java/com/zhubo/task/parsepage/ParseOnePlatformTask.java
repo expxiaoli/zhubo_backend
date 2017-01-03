@@ -76,7 +76,8 @@ public class ParseOnePlatformTask {
         ResourceManager rm = ResourceManager.generateResourceManager();
 
         File folder = new File(folderPath);
-        List<File> files = getValidFiles(folder.listFiles());
+        String folderName = folder.getName();
+        List<File> files = getValidFiles(folder.listFiles(), folderName);
         if(files.size() == 0) {
             System.out.println("empty page folder");
             return;
@@ -148,11 +149,12 @@ public class ParseOnePlatformTask {
 //        }
     }
 
-    private List<File> getValidFiles(File[] files) {
+    private List<File> getValidFiles(File[] files, String folderName) {
         List<File> validFiles = Lists.newArrayList();
         for (File file : files) {
             String[] parts = file.getName().split("-");
-            if (parts.length == 4 && (parts[2].length() == 14 || parts[2].length() == 17 )&& !file.getName().endsWith("swp")) {
+            if (parts.length == 4 && (parts[2].length() == 14 || parts[2].length() == 17 ) &&
+                    !file.getName().endsWith("swp") && parts[2].startsWith(folderName)) {
                 validFiles.add(file);
             }
         }
