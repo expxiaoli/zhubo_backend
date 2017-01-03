@@ -234,15 +234,25 @@ public class DatabaseCache {
     private void batchLoadLatestPayPeriod(int platformId) {
         Session session = rm.getDatabaseSession();
         latestPayPeriodMapper = Maps.newHashMap();
-        Query query = session.createQuery("from AudiencePayPeriod where platform_id = :platform_id and record_effective_time < :min_ts order by record_effective_time desc");
+        Query query = session.createQuery("from AudiencePayPeriod where platform_id = :platform_id and record_effective_time < :min_ts and record_effective_time > :base_ts order by record_effective_time desc");
         query.setParameter("platform_id", platformId);
         query.setParameter("min_ts", minTs);
+        Date baseTs = getDiffDateByDay(minTs, -14);
+        query.setParameter("base_ts", baseTs);
+        System.out.println("base_ts: " + baseTs.toGMTString() + "  min_ts: " + minTs);
         List<AudiencePayPeriod> payRecords = query.list();
         for(AudiencePayPeriod payRecord : payRecords) {
             putPayPeriodInCacheIfNotExist(payRecord.getAudienceId(), payRecord.getAnchorId(), 
                     new PayPeriodObject(payRecord.getPlatformId(), payRecord.getMoney(), payRecord.getPeriodStart(), payRecord.getRecordEffectiveTime()));
         }
         System.out.println("batchLoadLatestPayPeriod done");
+    }
+    
+    private Date getDiffDateByDay(Date date, int day) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(minTs);
+        cal.add(Calendar.DATE, day);
+        return cal.getTime();
     }
     
     private void putPayPeriodInCacheIfNotExist(long audienceId, long anchorId, 
@@ -718,8 +728,11 @@ public class DatabaseCache {
         latestRoundIncomeMapper = Maps.newHashMap();
         latestRoundStartMapper = Maps.newHashMap();
         Session session = rm.getDatabaseSession();
-        Query query = session.createQuery("from AnchorRoundIncomeByMinutes where platform_id = :platform_id and record_effective_time < :min_ts order by record_effective_time asc");
+        Query query = session.createQuery("from AnchorRoundIncomeByMinutes where platform_id = :platform_id and record_effective_time < :min_ts and record_effective_time > :base_ts order by record_effective_time asc");
         query.setParameter("min_ts", minTs);
+        Date baseTs = getDiffDateByDay(minTs, -14);
+        query.setParameter("base_ts", baseTs);
+        System.out.println("base_ts: " + baseTs.toGMTString() + "  min_ts: " + minTs);
         query.setParameter("platform_id", platformId);
         List<AnchorRoundIncomeByMinutes> records = query.list();
         for(AnchorRoundIncomeByMinutes record : records) {
