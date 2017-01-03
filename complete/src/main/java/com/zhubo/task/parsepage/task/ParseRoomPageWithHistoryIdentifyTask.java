@@ -207,21 +207,6 @@ public class ParseRoomPageWithHistoryIdentifyTask extends BaseParsePageTask {
         }
     }
 
-    private void storeRoundIncomeIfNeeded(ResourceManager rm, long anchorId, int platformId,
-            int money, Date ts) {
-        if (!rm.getDatabaseCache().existInRoundIncomeDates(anchorId, ts)) {
-            AnchorRoundIncomeByMinutes roundIncome = new AnchorRoundIncomeByMinutes(anchorId,
-                    platformId, money, ts);
-            rm.getDatabaseSession().save(roundIncome);
-            needCommit = true;
-        } else {
-            System.out
-                    .println(String
-                            .format("exist in minute round income for platform_id %d, anchor_id %d, ignore",
-                                    platformId, anchorId));
-        }
-    }
-
     private void storeAnchorIncomeIfNeeded(ResourceManager rm, long anchorId, int platformId,
             int income, Date pageDate) {
         if (!rm.getDatabaseCache().existInAnchorIncomeByMinutes(anchorId, pageDate)) {

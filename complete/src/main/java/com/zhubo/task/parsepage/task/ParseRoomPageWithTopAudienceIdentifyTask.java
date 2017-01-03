@@ -209,11 +209,6 @@ public class ParseRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTask 
         return oldTopAudiencePay != null && pageDate.compareTo(oldTopAudiencePay.recordEffectiveTime) <= 0;
     }
 
-    private boolean isRoundIncomeChanged(int roundIncome, long anchorId) {
-        Integer oldRoundIncome = resourceManager.getDatabaseCache().getLatestRoundIncome(anchorId);
-        return oldRoundIncome == null || !oldRoundIncome.equals(roundIncome);
-    }
-
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
             int platformId, boolean isOldRound, long periodMoney, Date ts) {
         Date periodStart = getQixiuPayAggregateDate(ts);

@@ -38,7 +38,7 @@ public class DatabaseCache {
     private Map<Long, Map<Long, Set<Date>>> payPeriodDatesMapper;
     private Map<Long, Set<Date>> anchorIncomeByMinutesMapper;
     private Map<Long, Set<Date>> roundIncomeDatesMapper;
-    private Map<Long, Integer> latestRoundIncomeMapper;
+    private Map<Long, Long> latestRoundIncomeMapper;
     private Map<Long, Date> latestRoundStartMapper;
     
     private Map<Long, Map<String, Set<Date>>> metricByDaysDatesMapper;
@@ -723,7 +723,7 @@ public class DatabaseCache {
         query.setParameter("platform_id", platformId);
         List<AnchorRoundIncomeByMinutes> records = query.list();
         for(AnchorRoundIncomeByMinutes record : records) {
-            Integer oldRoundIncome = latestRoundIncomeMapper.get(record.getAnchorId());
+            Long oldRoundIncome = latestRoundIncomeMapper.get(record.getAnchorId());
             if(oldRoundIncome == null || oldRoundIncome > record.getMoney()) {
                 latestRoundStartMapper.put(record.getAnchorId(), record.getRecordEffectiveTime());
             }
@@ -776,7 +776,7 @@ public class DatabaseCache {
         topAudiencePayForOneAnchorMapper.clear();
     }
     
-    public Integer getLatestRoundIncome(long anchorId) {
+    public Long getLatestRoundIncome(long anchorId) {
         return latestRoundIncomeMapper.get(anchorId);
     }
     
@@ -784,7 +784,7 @@ public class DatabaseCache {
         return latestRoundStartMapper.get(anchorId);
     }
     
-    public void setLatestRoundIncome(long anchorId, Integer money) {
+    public void setLatestRoundIncome(long anchorId, Long money) {
         latestRoundIncomeMapper.put(anchorId, money);
     }
     

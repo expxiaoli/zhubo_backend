@@ -93,7 +93,7 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
         List<Element> itemElements = root.getChildren();
         Long anchorAliasId = null;
         String anchorName = null;
-        Integer roundIncome = null;
+        Long roundIncome = null;
         List<Metric> metrics = Lists.newArrayList();
         Map<Long, Pay> pays = Maps.newHashMap();
         for (Element itemElement : itemElements) {
@@ -105,7 +105,7 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
                 } else if (itemName.equals("昵称")) {
                     anchorName = itemBody;
                 } else if (itemName.equals("total")) {
-                    roundIncome = Integer.valueOf(itemBody);
+                    roundIncome = Long.valueOf(itemBody);
                 } else {
                     metrics.add(new Metric(itemName, GeneralHelper.getIntegerFromComplextString(itemBody)));
                 }
@@ -124,6 +124,10 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
         }
         if(anchorAliasId == null || anchorAliasId.equals(0L)) {
             System.out.println("-_-> anchor alias id is null or 0, ignore this page");
+            return;
+        }
+        if(roundIncome == null) {
+            System.out.println("-_-> roundIncome is null, ignore this page");
             return;
         }
         
@@ -175,18 +179,18 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
         }
     }
 
-    private boolean isOldRound(int roundIncome, long anchorId) {
-        Integer oldRoundIncome = resourceManager.getDatabaseCache().getLatestRoundIncome(anchorId);
+    private boolean isOldRound(long roundIncome, long anchorId) {
+        Long oldRoundIncome = resourceManager.getDatabaseCache().getLatestRoundIncome(anchorId);
         return oldRoundIncome != null && roundIncome >= oldRoundIncome;
     }
 
-    private boolean isRoundIncomeChanged(int roundIncome, long anchorId) {
-        Integer oldRoundIncome = resourceManager.getDatabaseCache().getLatestRoundIncome(anchorId);
+    private boolean isRoundIncomeChanged(long roundIncome, long anchorId) {
+        Long oldRoundIncome = resourceManager.getDatabaseCache().getLatestRoundIncome(anchorId);
         return oldRoundIncome == null || !oldRoundIncome.equals(roundIncome);
     }
 
     private void storePayPeriodAndPayMinute(ResourceManager rm, long audienceId, long anchorId,
-            int platformId, boolean isOldRound, Date latestRoundStart, int roundIncome, long periodMoney, Date ts) {
+            int platformId, boolean isOldRound, Date latestRoundStart, long roundIncome, long periodMoney, Date ts) {
         Date periodStart = getQixiuPayAggregateDate(ts);
         PayPeriodObject payPeriod = new PayPeriodObject(platformId, periodMoney, periodStart, ts);
         Integer diffMoney = resourceManager.getDatabaseCache()
@@ -233,7 +237,7 @@ public class ParseRoomPageWithRoundIdentifyTask extends BaseParsePageTask {
     }
 
     private void storeRoundIncomeIfNeeded(ResourceManager rm, long anchorId, int platformId,
-            int money, Date ts) {
+            long money, Date ts) {
         if (!rm.getDatabaseCache().existInRoundIncomeDates(anchorId, ts)) {
             AnchorRoundIncomeByMinutes roundIncome = new AnchorRoundIncomeByMinutes(anchorId,
                     platformId, money, ts);

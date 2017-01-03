@@ -23,7 +23,7 @@ public class AnchorRoundIncomeByMinutes {
     private Integer platformId;
 
     @Column(name = "money")
-    private Integer money;
+    private Long money;
 
     @Column(name = "created")
     private Date created;
@@ -35,7 +35,7 @@ public class AnchorRoundIncomeByMinutes {
 
     }
 
-    public AnchorRoundIncomeByMinutes(Long anchorId, Integer platformId, Integer money,
+    public AnchorRoundIncomeByMinutes(Long anchorId, Integer platformId, Long money,
             Date recordEffectiveTime) {
         this.anchorId = anchorId;
         this.platformId = platformId;
@@ -48,7 +48,7 @@ public class AnchorRoundIncomeByMinutes {
         return anchorId;
     }
 
-    public Integer getMoney() {
+    public Long getMoney() {
         return money;
     }
 
