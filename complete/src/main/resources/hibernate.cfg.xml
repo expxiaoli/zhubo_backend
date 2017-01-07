@@ -6,7 +6,7 @@
     <session-factory>
     	<property name="connection.username">root</property>
     	<property name="connection.password">ZhuBojj-123</property>
-    	<property name="hibernate.connection.url">jdbc:mysql://115.28.22.18:3306/zhubo_dev</property>
+    	<property name="hibernate.connection.url">jdbc:mysql://115.28.22.18:3306/zhubo_mock</property>
     	<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
     	<property name="hibernate.connection.pool.size">20</property>          
         <property name="hibernate.show_sql">false</property>
@@ -16,7 +16,7 @@
         <property name="Connection.useUnicode">true</property>   
     	<property name="connection.characterEncoding">utf8</property>
     	<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
-    	<property name="hbm2ddl.auto">update</property> 
+    	<property name="hbm2ddl.auto">create</property> 
     	<mapping class="com.zhubo.entity.Platform"/>
     	<mapping class="com.zhubo.entity.Anchor"/>
     	<mapping class="com.zhubo.entity.AnchorMetricByMinutes"/>

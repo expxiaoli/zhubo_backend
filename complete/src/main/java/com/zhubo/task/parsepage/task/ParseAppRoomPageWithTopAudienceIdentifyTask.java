@@ -52,12 +52,19 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
     }
 
     public boolean run() throws JDOMException, IOException, PageFormatException {
+        long t1 = System.currentTimeMillis();
         InputStreamReader input = new InputStreamReader(new FileInputStream(file));
         BufferedReader bufferedReader = new BufferedReader(input);
         String line = bufferedReader.readLine();
+        long t2 = System.currentTimeMillis();
         try {
             JSONObject json = JSONObject.parseObject(line);
+            long t3 = System.currentTimeMillis();
             parseAndStoreMetric(json);
+            long t4 = System.currentTimeMillis();
+            System.out.println("****** read line = " + (t2-t1));
+            System.out.println("****** parse level 1 json = " + (t3-t2));
+            System.out.println("********** total = " + (t4-t1));
             return true;
         }catch(com.alibaba.fastjson.JSONException e) {
             e.printStackTrace();
@@ -66,6 +73,7 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
     }
 
     private void parseAndStoreMetric(JSONObject json) {
+        long t1 = System.currentTimeMillis();
         Long dateTs = json.getLong("timestamp");
         Date pageDate = new Date(dateTs * 1000);
         Integer flowers = json.getInteger("fllowers");
@@ -76,7 +84,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
         if(flowers != null) {
             metrics.add(new Metric("星光", flowers));
         }
-      
+        long t2 = System.currentTimeMillis();
+        System.out.println("**** parse metric = " + (t2 - t1));
+        
         Map<Long, Pay> pays = Maps.newHashMap();
         if(viplist != null) {
             JSONArray vips = JSONObject.parseArray(viplist);  
@@ -88,6 +98,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
                 pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
             }
         }
+        long t3 = System.currentTimeMillis();
+        System.out.println("**** parse pay = " + (t3 - t2));
+        
         if(anchorAliasId == null || anchorAliasId.equals(0L)) {
             System.out.println("-_-> anchor alias id is null or 0, ignore this page");
             return;
@@ -104,6 +117,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
             System.out.println("-_-> old top pay ts is newer or same, ignore this page");
             return;
         }
+        
+        long t4 = System.currentTimeMillis();
+        System.out.println("**** get anchor = " + (t4 - t3));
 
         for (Metric metric : metrics) {
             if (!resourceManager.getDatabaseCache().existInMetricByMinutes(anchorId, metric.type,
@@ -114,7 +130,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
                 needCommit = true;
             }
         }
-
+        long t5 = System.currentTimeMillis();
+        System.out.println("**** process metric = " + (t5 - t4));
+        
         if(pays.size() > 0) {
             boolean isOldRound = isOldRound(pays, anchorId, pageDate);
 
@@ -123,11 +141,16 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
                 resourceManager.getDatabaseCache().setPayPeriodInCacheToZeroForOneAnchor(anchorId, new Date(pageDate.getTime() - 1000));
             }
             for (Pay pay : pays.values()) {
+                long tt1 =System.currentTimeMillis(); 
                 Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
+                long tt2 =System.currentTimeMillis(); 
+                System.out.println("** get one audience = " + (tt2 - tt1));
                 if (pay.money != null) {
                     storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId, platformId,
                         isOldRound, pay.money, pageDate);
+                    long tt3 =System.currentTimeMillis(); 
+                    System.out.println("** store one pay = " + (tt3 - tt2));
                 }
             }            
             if (income > 0) {
@@ -136,8 +159,13 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
             updateTopAudiencePayForOneAnchor(anchorId, pays, pageDate);
         }
         
+        long t6 = System.currentTimeMillis();
+        System.out.println("**** process pay = " + (t6 - t5));
+        
         if (needCommit) {
             resourceManager.commit();
+            long t7 = System.currentTimeMillis();
+            System.out.println("**** commit = " + (t7 - t6));
         } else {
             System.out.println("old page, ignore commit");
         }
