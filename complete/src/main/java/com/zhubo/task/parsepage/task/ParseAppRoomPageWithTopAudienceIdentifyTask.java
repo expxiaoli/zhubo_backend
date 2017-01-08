@@ -77,7 +77,7 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
         Long dateTs = json.getLong("timestamp");
         Date pageDate = new Date(dateTs * 1000);
         Integer flowers = json.getInteger("fllowers");
-        Long anchorAliasId = json.getLong("ykid");
+        Long anchorAliasId = json.getLong("roomnum");
         String anchorName = json.getString("nick");
         String viplist = json.getString("viplist");
         List<Metric> metrics = Lists.newArrayList();
