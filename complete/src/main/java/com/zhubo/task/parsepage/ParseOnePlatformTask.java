@@ -17,6 +17,7 @@ import com.zhubo.expcetion.PageFormatException;
 import com.zhubo.global.ResourceManager;
 import com.zhubo.helper.GeneralHelper;
 import com.zhubo.task.parsepage.factory.BaseParsePageFactory;
+import com.zhubo.task.parsepage.factory.ParseHaniRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseHuajiaoRoomPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengPlatformPageFactory;
 import com.zhubo.task.parsepage.factory.ParseLaifengRoomPageFactory;
@@ -63,6 +64,7 @@ public class ParseOnePlatformTask {
         parseRoomPageFactoryClasses.put(5, ParseHuajiaoRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(6, ParseYizhiboRoomPageFactory.class);
         parseRoomPageFactoryClasses.put(12, ParseYingkeRoomPageFactory.class);
+        parseRoomPageFactoryClasses.put(13, ParseHaniRoomPageFactory.class);
     }
     
     public ParseOnePlatformTask(int platformId) {

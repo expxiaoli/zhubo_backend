@@ -82,8 +82,15 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
             JSONArray vips = JSONObject.parseArray(viplist);  
             for (int i = 0; i < vips.size(); i++) {
                 JSONObject vip = (JSONObject) vips.get(i);
-                String audienceName = vip.getJSONObject("user").getString("nick");
-                Long audienceAliasId = vip.getJSONObject("user").getLong("id");
+                String audienceName = null;
+                Long audienceAliasId = null;
+                if(vip.containsKey("user")) {
+                    audienceName = vip.getJSONObject("user").getString("nick");
+                    audienceAliasId = vip.getJSONObject("user").getLong("id");
+                } else {
+                    audienceName = vip.getString("nick");
+                    audienceAliasId = vip.getLong("id");
+                }
                 Long money = vip.getLong("contribution");
                 pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
             }
