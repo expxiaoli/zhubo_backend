@@ -92,7 +92,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
                     audienceAliasId = vip.getLong("id");
                 }
                 Long money = vip.getLong("contribution");
-                pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
+                if(audienceAliasId != null && audienceName != null && money != null) {
+                    pays.put(audienceAliasId, new Pay(audienceAliasId, audienceName, money));
+                }
             }
         }
         if(anchorAliasId == null || anchorAliasId.equals(0L)) {
