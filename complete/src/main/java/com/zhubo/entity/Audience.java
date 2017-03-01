@@ -10,7 +10,8 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "1005_Audience", indexes = {
-        @Index(columnList = "platform_id,audience_id", name = "audience_simple_index")
+        @Index(columnList = "platform_id,audience_id", name = "audience_simple_index"),
+        @Index(columnList = "platform_id, audience_alias_id, audience_name", name = "audience_search_index"),
 })
 public class Audience {
     @Id
