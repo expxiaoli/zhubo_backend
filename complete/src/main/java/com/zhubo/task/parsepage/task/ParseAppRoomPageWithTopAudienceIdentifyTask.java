@@ -281,20 +281,22 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
             oldAudienceIdFromAliasId = newAudience.getAudienceId();
         }
         long start3 = System.currentTimeMillis();
+        System.out.println("** getAudienceIdOrNewOrUpdate - from cache:" + (start2 - start1));
+        System.out.println("** getAudienceIdOrNewOrUpdate - save db:" + (start3 - start2));
         Long oldAudienceIdFromName = dbCache.getIdFromAudienceName(platformId, audienceName);
         if (oldAudienceIdFromName == null) {
             Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceAliasId, null);
+            long start4 = System.currentTimeMillis();
             oldAudience.setAudienceName(audienceName);
             oldAudience.setLastUpdated(new Date());
             rm.getDatabaseSession().update(oldAudience);
             needCommit = true;
             rm.getDatabaseCache()
                     .setAudienceMapper(null, audienceName, oldAudience.getAudienceId());
+            long start5 = System.currentTimeMillis();
+            System.out.println("** getAudienceIdOrNewOrUpdate - query db:" + (start4 - start3));
+            System.out.println("** getAudienceIdOrNewOrUpdate - update db:" + (start5 - start4));
         }
-        long start4 = System.currentTimeMillis();
-        System.out.println("** getAudienceIdOrNewOrUpdate - from cache:" + (start2 - start1));
-        System.out.println("** getAudienceIdOrNewOrUpdate - save db:" + (start3 - start2));
-        System.out.println("** getAudienceIdOrNewOrUpdate - query db:" + (start4 - start3));
         return oldAudienceIdFromAliasId;
     }
 
