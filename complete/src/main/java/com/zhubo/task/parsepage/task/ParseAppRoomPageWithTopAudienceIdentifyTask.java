@@ -66,6 +66,7 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
     }
 
     private void parseAndStoreMetric(JSONObject json) {
+        long start1 = System.currentTimeMillis();
         Long dateTs = json.getLong("timestamp");
         Date pageDate = new Date(dateTs * 1000);
         Integer flowers = json.getInteger("fllowers");
@@ -107,6 +108,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
             return;
         }
         
+        long start2 = System.currentTimeMillis();
+        System.out.println("****** parse:" + (start2 - start1));
+        
         Long anchorId = getAnchorIdOrNew(resourceManager, platformId, anchorAliasId, anchorName,
                 pageDate);
         if(hasProcessed(anchorId, pageDate)) {
@@ -123,6 +127,9 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
                 needCommit = true;
             }
         }
+        
+        long start3 = System.currentTimeMillis();
+        System.out.println("****** process metric:" + (start3 - start2));
 
         if(pays.size() > 0) {
             boolean isOldRound = isOldRound(pays, anchorId, pageDate);
@@ -132,12 +139,15 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
                 resourceManager.getDatabaseCache().setPayPeriodInCacheToZeroForOneAnchor(anchorId, new Date(pageDate.getTime() - 1000));
             }
             for (Pay pay : pays.values()) {
+                long start4 = System.currentTimeMillis();
                 Long audienceId = getAudienceIdOrNewOrUpdate(resourceManager, platformId,
                     pay.audienceName, pay.audienceAliasId);
                 if (pay.money != null) {
                     storePayPeriodAndPayMinute(resourceManager, audienceId, anchorId, platformId,
                         isOldRound, pay.money, pageDate);
                 }
+                long start5 = System.currentTimeMillis();
+                System.out.println("**** process one pay:" + (start5 - start4));
             }            
             if (income > 0) {
                 storeAnchorIncomeIfNeeded(resourceManager, anchorId, platformId, income, pageDate);
@@ -145,11 +155,18 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
             updateTopAudiencePayForOneAnchor(anchorId, pays, pageDate);
         }
         
+        long start6 = System.currentTimeMillis();
+        System.out.println("****** process all pay and top:" + (start6 - start3));
+        
         if (needCommit) {
             resourceManager.commit();
+            long start7 = System.currentTimeMillis();
+            System.out.println("****** commit:" + (start7 - start6));
         } else {
             System.out.println("old page, ignore commit");
         }
+        long start8 = System.currentTimeMillis();
+        System.out.println("*************** all:" + (start8 - start1));
     }
     
     private void updateTopAudiencePayForOneAnchor(long anchorId, Map<Long, Pay> pays, Date pageDate) {
@@ -250,9 +267,11 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
 
     public Long getAudienceIdOrNewOrUpdate(ResourceManager rm, int platformId, String audienceName,
             Long audienceAliasId) {
+        long start1 = System.currentTimeMillis();
         DatabaseCache dbCache = rm.getDatabaseCache();
         Long oldAudienceIdFromAliasId = dbCache.getIdFromAudienceAliasId(platformId,
                 audienceAliasId);
+        long start2 = System.currentTimeMillis();
         if (oldAudienceIdFromAliasId == null) {
             Audience newAudience = new Audience(platformId, audienceAliasId, audienceName);
             rm.getDatabaseSession().save(newAudience);
@@ -261,7 +280,7 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
                     newAudience.getAudienceId());
             oldAudienceIdFromAliasId = newAudience.getAudienceId();
         }
-
+        long start3 = System.currentTimeMillis();
         Long oldAudienceIdFromName = dbCache.getIdFromAudienceName(platformId, audienceName);
         if (oldAudienceIdFromName == null) {
             Audience oldAudience = ModelHelper.getAudience(rm, platformId, audienceAliasId, null);
@@ -272,6 +291,10 @@ public class ParseAppRoomPageWithTopAudienceIdentifyTask extends BaseParsePageTa
             rm.getDatabaseCache()
                     .setAudienceMapper(null, audienceName, oldAudience.getAudienceId());
         }
+        long start4 = System.currentTimeMillis();
+        System.out.println("** getAudienceIdOrNewOrUpdate - from cache:" + (start2 - start1));
+        System.out.println("** getAudienceIdOrNewOrUpdate - save db:" + (start3 - start2));
+        System.out.println("** getAudienceIdOrNewOrUpdate - query db:" + (start4 - start3));
         return oldAudienceIdFromAliasId;
     }
 
